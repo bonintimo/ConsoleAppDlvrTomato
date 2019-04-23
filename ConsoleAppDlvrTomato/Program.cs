@@ -1129,6 +1129,8 @@ namespace orcplan
 
                 DataRow[] planOrders = deliveryPlan.Tables[tblOINFO].Select().Where(row =>
                 {
+                    if (row is null) return false;
+
                     lock (row)
                     {
                         return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.COOKING
