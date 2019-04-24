@@ -279,6 +279,48 @@ namespace orcplan
             }
 
             UpdateCourierGeoPosition(nextPlan);
+
+            UpdateCourierState(nextPlan);
+        }
+
+        private static void UpdateCourierState(DataSet nextPlan)
+        {
+
+            nextPlan.Tables[tblCINFO].Select().All<DataRow>(rowCinfo =>
+            {
+                DataRow[] ordsCinfo = nextPlan.Tables[tblOINFO].Select().Where<DataRow>(oRow =>
+                {
+                    return (oRow[colOINFO_CID].ToString() == rowCinfo[colCINFO_CID].ToString());
+                }).ToArray();
+
+                DataRow[] ordsTrans = ordsCinfo.Where<DataRow>(oRow =>
+                {
+                    return (((OINFO_STATE)oRow[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING);
+                }).ToArray();
+
+                if (((CINFO_STATE)rowCinfo[colCINFO_STATE]) == CINFO_STATE.ONROAD)
+                {
+                    if (ordsTrans.Count() == 0)
+                    {
+                        rowCinfo[colCINFO_STATE] = CINFO_STATE.ONLINE;
+                        return true;
+                    }
+                }
+
+                if (((CINFO_STATE)rowCinfo[colCINFO_STATE]) == CINFO_STATE.ONLINE)
+                {
+                    if ((ordsTrans.Count() >= MAX_ORDERS_FOR_COURIERS) 
+                    || ((ordsTrans.Count() > 0) && (ordsCinfo.Count() > MAX_ORDERS_FOR_COURIERS)))
+                    {
+                        rowCinfo[colCINFO_STATE] = CINFO_STATE.ONROAD;
+                        return true;
+                    }
+                }
+
+                return true;
+            });
+
+            nextPlan.AcceptChanges();
         }
 
         private static void UpdateCourierGeoPosition(DataSet nextPlan)
@@ -1156,9 +1198,21 @@ namespace orcplan
                 {
                     lock (oInfo)
                     {
+                        if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
+                        {
+                            if (((CINFO_STATE)cInfo[colCINFO_STATE]) == CINFO_STATE.ONROAD)
+                            {
+                                routeList.AddFirst(new LinkedListNode<string>(oInfo[colOINFO_OID].ToString()));
+                                continue;
+                            }
+                        }
+
                         string ridID = oInfo[colOINFO_RID].ToString();
                         if (ridID != currRID)
                         {
+                            ridNode = null;
+                            oidNode = null;
+
                             if (!String.IsNullOrEmpty(currRID))
                             {
                                 routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
@@ -1168,6 +1222,14 @@ namespace orcplan
                             {
                                 ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[{oInfo[colOINFO_OID].ToString()}]");
                                 routeList.AddLast(ridNode);
+                            }
+                            else
+                            { // state of order is OINFO_STATE.TRANSPORTING
+                                if (((CINFO_STATE)cInfo[colCINFO_STATE]) != CINFO_STATE.ONROAD)
+                                {
+                                    ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
+                                    routeList.AddLast(ridNode);
+                                }
                             }
 
                             oidNode = new LinkedListNode<string>(oInfo[colOINFO_OID].ToString());
@@ -1188,6 +1250,12 @@ namespace orcplan
                                 {
                                     routeList.AddAfter(ridNode, nodeRID);
                                 }
+                                ridNode = nodeRID;
+                            }
+                            else
+                            { // state of order is OINFO_STATE.TRANSPORTING and state of courier isn't CINFO_STATE.ONROAD
+                                LinkedListNode<string> nodeRID = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
+                                routeList.AddAfter(ridNode, nodeRID);
                                 ridNode = nodeRID;
                             }
 
