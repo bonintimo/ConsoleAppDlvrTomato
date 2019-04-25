@@ -40,7 +40,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./OINFO-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -1752,6 +1752,7 @@ namespace orcplan
             if (TheBestDeliveryPlan == null)
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
+                Console.WriteLine($"new TBDP");
             }
             else
             {
@@ -1769,7 +1770,7 @@ namespace orcplan
 
         private static bool CompareTotalength(DataSet theBestDeliveryPlan, long totalRouteLength)
         {
-            return totalRouteLength <= ((int)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]);
+            return totalRouteLength < ((int)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]);
         }
 
         private static bool CompareMedAndDiv(DataSet theBestDeliveryPlan, DataSet deliveryPlan)
