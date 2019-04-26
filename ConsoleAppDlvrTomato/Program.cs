@@ -1781,7 +1781,7 @@ namespace orcplan
             TimeSpan planMed = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["MED"];
             TimeSpan planDiv = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"];
 
-            return (planMed <= theBestMed) && (planDiv <= theBestDiv);
+            return ((planMed <= theBestMed) && (planDiv < theBestDiv)) || ((planMed < theBestMed) && (planDiv <= theBestDiv));
         }
 
         private static void UpdateMedDiv(DataSet deliveryPlan)
@@ -1825,6 +1825,8 @@ namespace orcplan
                 deliveryPlan.Tables["SUMMARY"].Rows[0]["MED"] = TimeSpan.FromTicks(0);
                 deliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"] = TimeSpan.FromTicks(0);
             }
+
+            deliveryPlan.AcceptChanges();
         }
 
         private static void CalculateStatistics(DataSet deliveryPlan)
