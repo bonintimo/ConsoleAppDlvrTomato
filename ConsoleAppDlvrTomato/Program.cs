@@ -37,6 +37,8 @@ namespace orcplan
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             //TspDoTest(args);
+            File.AppendAllText("executionLOG.tsv", "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
+            File.AppendAllText("ordersARCHIVE.tsv", "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
 
             //Console.WriteLine("Hello World!");
 
@@ -61,7 +63,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
