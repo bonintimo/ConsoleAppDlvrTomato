@@ -686,6 +686,7 @@ namespace orcplan
             scriptPlan.AppendLine($"<html><head><title>TBDP {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()}</title>");
             scriptPlan.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>");
             scriptPlan.AppendLine("<script src=\"https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=a1d0badd-df1d-4814-8d43-eab723c50133\" type=\"text/javascript\"></script>");
+            //scriptPlan.AppendLine("<script src=\"animated_line.js\" type =\"text/javascript\"></script>");
             scriptPlan.AppendLine("<script type=\"text/javascript\">");
 
             scriptPlan.AppendLine("ymaps.ready(init);");
@@ -744,6 +745,10 @@ namespace orcplan
                 coords += $",[{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LAT].ToString()},{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LNG].ToString()}]";
 
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3 }} ));");
+                //scriptPlan.AppendLine($"{{ var animLine = new ymaps.AnimatedLine([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3, animationTime: 4000 }} );");
+                //scriptPlan.AppendLine($"myMap.geoObjects.add(animLine);");
+                //scriptPlan.AppendLine($"function playAnimation() {{ animLine.animate().then(function(){{return ymaps.vow.delay(null, 2000);}}).then(function(){{playAnimation();}}); }}");
+                //scriptPlan.AppendLine($"playAnimation(); }}");
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{ boundsAutoApply: false }}));");
             }
 
