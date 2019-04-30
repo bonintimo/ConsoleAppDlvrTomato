@@ -386,7 +386,8 @@ namespace orcplan
         private static void DoNextState(DataRow firstEvent, DataSet nextPlan, DateTime dtEvent)
         {
             OINFO_STATE currState = (OINFO_STATE)firstEvent[colOINFO_STATE];
-            switch(currState)
+
+            switch (currState)
             {
                 case OINFO_STATE.BEGINNING:
                     firstEvent[colOINFO_STATE] = OINFO_STATE.COOKING;
@@ -446,6 +447,17 @@ namespace orcplan
                     break;
             }
 
+            try
+            {
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDS"] = (OINFO_STATE)firstEvent[colOINFO_STATE];
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDO"] = firstEvent[colOINFO_OID].ToString();
+            }
+            catch
+            {
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDS"] = OINFO_STATE.ENDED;
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDO"] = "";
+            }
+
             nextPlan.AcceptChanges();
         }
 
@@ -474,6 +486,11 @@ namespace orcplan
                 bgnnOrder[colOINFO_CID] = nextPlan.Tables[tblCINFO].Rows[0][colCINFO_CID];
 
                 nextPlan.Tables[tblOINFO].Rows.Add(bgnnOrder);
+
+
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDS"] = (OINFO_STATE)bgnnOrder[colOINFO_STATE];
+                nextPlan.Tables["SUMMARY"].Rows[0]["BUILDO"] = bgnnOrder[colOINFO_OID].ToString();
+
                 nextPlan.AcceptChanges();
             }
             catch
@@ -691,8 +708,10 @@ namespace orcplan
 
             scriptPlan.AppendLine("ymaps.ready(init);");
             scriptPlan.AppendLine("function init() { var myMap = new ymaps.Map(\"map\", { center: [54.206134, 37.669204], zoom: 14, controls: ['smallMapDefaultSet'] }, { searchControlProvider: 'yandex#search' });");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"].ToString()}\"), {{float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\"), {{float: 'right'}});");
 
-            foreach(DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
+            foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
             {
                 if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
                 {
@@ -2259,6 +2278,8 @@ namespace orcplan
             DataTable summary = new DataTable("SUMMARY");
 
             summary.Columns.Add("BUILDT", typeof(DateTime));
+            summary.Columns.Add("BUILDS", typeof(OINFO_STATE));
+            summary.Columns.Add("BUILDO", typeof(string));
             summary.Columns.Add("MED", typeof(TimeSpan));
             summary.Columns.Add("DIV", typeof(TimeSpan));
             summary.Columns.Add("TOTALENGTH", typeof(int));
