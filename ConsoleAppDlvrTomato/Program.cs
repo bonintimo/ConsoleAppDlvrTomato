@@ -122,7 +122,7 @@ namespace orcplan
         {
             switch(stateNext)
             {
-                case OINFO_STATE.BEGINNING:
+                case OINFO_STATE.COOKING:
                 case OINFO_STATE.READY:
                 case OINFO_STATE.PLACING:
                     return true;
@@ -643,15 +643,19 @@ namespace orcplan
                 DateTime newStart = (DateTime)row[colOINFO_TC] + TimeSpan.FromTicks(Math.Abs(((TimeSpan)row[colOINFO_TD]).Ticks) / 2);
                 bool isStart = (((TimeSpan)row[colOINFO_TD]).Ticks < 0) && ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING) && (newStart < buildt);
 
+                TimeSpan timeForReady = (DateTime)row[colOINFO_TR] - (DateTime)row[colOINFO_TC];
                 if (isStart)
                 {
-                    TimeSpan timeForReady = (DateTime)row[colOINFO_TR] - (DateTime)row[colOINFO_TC];
                     row[colOINFO_TC] = buildt;
                     row[colOINFO_TR] = buildt + timeForReady;
                     //row[colORDERS_RID] = deliveryPlan.Tables[tblRINFO].Rows[0][colRINFO_RID];
                     //row[colORDERS_CID] = deliveryPlan.Tables[tblCINFO].Rows[0][colCINFO_CID];
                 }
-
+                else
+                {
+                    //row[colOINFO_TC] = newStart;
+                    //row[colOINFO_TR] = newStart + timeForReady;
+                }
                 return isStart;
             }).ToArray<DataRow>();
             deliveryPlan.AcceptChanges();
