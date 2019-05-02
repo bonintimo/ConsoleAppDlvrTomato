@@ -17,17 +17,17 @@ using System.Device.Location;
 namespace orcplan
 {
 
-    enum OINFO_STATE { BEGINNING = 110, COOKING = 120, READY = 130, TRANSPORTING = 140, PLACING = 150, ENDED = 160 };
-    enum RINFO_STATE { OFFLINE = 210, ONLINE = 220, BRAKEDOWN = 230 };
-    enum CINFO_STATE { OFFLINE = 310, ONLINE = 320, BRAKEDOWN = 330, ONROAD = 340 };
+    enum OINFO_STATE { UNDEFINE = 100, BEGINNING = 110, COOKING = 120, READY = 130, TRANSPORTING = 140, PLACING = 150, ENDED = 160 };
+    enum RINFO_STATE { UNDEFINE = 200, OFFLINE = 210, ONLINE = 220, BRAKEDOWN = 230 };
+    enum CINFO_STATE { UNDEFINE = 300, OFFLINE = 310, ONLINE = 320, BRAKEDOWN = 330, ONROAD = 340 };
 
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 3;
         public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 6;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -49,6 +49,7 @@ namespace orcplan
 
             bool isContinue = true;
             DataSet deliveryPlan = null, nextPlan = null;
+            OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
             do
             {
 
@@ -63,22 +64,24 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C5.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
                     case "NEXT":
-                        ApplyNextEvent(nextPlan);
+                        stateNext = ApplyNextEvent(nextPlan);
                         deliveryPlan = nextPlan;
-                        nextPlan = PlanningForOrders(deliveryPlan);
+                        if (IsNeedPlanning(stateNext))
+                            nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
                     case "RUN":
                         while ((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.Rows.Count > 0))
                         {
-                            ApplyNextEvent(nextPlan);
+                            stateNext = ApplyNextEvent(nextPlan);
                             deliveryPlan = nextPlan;
-                            nextPlan = PlanningForOrders(deliveryPlan);
+                            if (IsNeedPlanning(stateNext))
+                                nextPlan = PlanningForOrders(deliveryPlan);
                         }
                         break;
 
@@ -113,6 +116,19 @@ namespace orcplan
             //Task.WaitAll(taskList.ToArray());
 
             //Console.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
+        }
+
+        private static bool IsNeedPlanning(OINFO_STATE stateNext)
+        {
+            switch(stateNext)
+            {
+                case OINFO_STATE.BEGINNING:
+                case OINFO_STATE.READY:
+                case OINFO_STATE.PLACING:
+                    return true;
+                    break;
+            }
+            return false;
         }
 
         private static DataTable BgnnOrders = null;
@@ -244,10 +260,10 @@ namespace orcplan
             dr["LNG"] = latlng[0];
         }
 
-        private static void ApplyNextEvent(DataSet nextPlan)
+        private static OINFO_STATE ApplyNextEvent(DataSet nextPlan)
         {
             //
-
+            OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
 
             var planEvents = nextPlan.Tables[tblOINFO].Select().OrderBy<DataRow, DateTime>(row =>
              {
@@ -263,11 +279,11 @@ namespace orcplan
 
                 if ((BgnnOrders.Rows.Count > 0) && (dtEvent > (DateTime)BgnnOrders.Rows[0]["TB"]))
                 {
-                    InsertBeginningOrderToPlan(nextPlan);
+                    stateNext = InsertBeginningOrderToPlan(nextPlan);
                 }
                 else
                 {
-                    DoNextState(firstEvent, nextPlan, dtEvent);
+                    stateNext = DoNextState(firstEvent, nextPlan, dtEvent);
                     nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = dtEvent;
                     nextPlan.AcceptChanges();
                 }
@@ -276,13 +292,15 @@ namespace orcplan
             {
                 if ((BgnnOrders.Rows.Count > 0))
                 {
-                    InsertBeginningOrderToPlan(nextPlan);
+                    stateNext = InsertBeginningOrderToPlan(nextPlan);
                 }
             }
 
             UpdateCourierGeoPosition(nextPlan);
 
             UpdateCourierState(nextPlan);
+
+            return stateNext;
         }
 
         private static void UpdateCourierState(DataSet nextPlan)
@@ -372,7 +390,7 @@ namespace orcplan
             nextPlan.AcceptChanges();
         }
 
-        private static void InsertBeginningOrderToPlan(DataSet nextPlan)
+        private static OINFO_STATE InsertBeginningOrderToPlan(DataSet nextPlan)
         {
             nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = (DateTime)BgnnOrders.Rows[0]["TB"];
 
@@ -381,21 +399,23 @@ namespace orcplan
             BgnnOrders.AcceptChanges();
 
             nextPlan.AcceptChanges();
+            return OINFO_STATE.BEGINNING;
         }
 
-        private static void DoNextState(DataRow firstEvent, DataSet nextPlan, DateTime dtEvent)
+        private static OINFO_STATE DoNextState(DataRow firstEvent, DataSet nextPlan, DateTime dtEvent)
         {
+            OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
             OINFO_STATE currState = (OINFO_STATE)firstEvent[colOINFO_STATE];
 
             switch (currState)
             {
                 case OINFO_STATE.BEGINNING:
-                    firstEvent[colOINFO_STATE] = OINFO_STATE.COOKING;
+                    firstEvent[colOINFO_STATE] = stateNext = OINFO_STATE.COOKING;
                     firstEvent[colOINFO_TC] = dtEvent;
                     break;
 
                 case OINFO_STATE.COOKING:
-                    firstEvent[colOINFO_STATE] = OINFO_STATE.READY;
+                    firstEvent[colOINFO_STATE] = stateNext = OINFO_STATE.READY;
                     firstEvent[colOINFO_TR] = dtEvent;
                     break;
 
@@ -409,7 +429,7 @@ namespace orcplan
                         cid[colCINFO_TOS] = GetDateTimeEvent(firstEvent);
                     }
 
-                    firstEvent[colOINFO_STATE] = OINFO_STATE.TRANSPORTING;
+                    firstEvent[colOINFO_STATE] = stateNext = OINFO_STATE.TRANSPORTING;
                     firstEvent[colOINFO_TT] = dtEvent;
                     break;
 
@@ -422,7 +442,7 @@ namespace orcplan
                         cid[colCINFO_TOS] = GetDateTimeEvent(firstEvent);
                     }
 
-                    firstEvent[colOINFO_STATE] = OINFO_STATE.PLACING;
+                    firstEvent[colOINFO_STATE] = stateNext = OINFO_STATE.PLACING;
                     firstEvent[colOINFO_TP] = dtEvent;
                     break;
 
@@ -435,7 +455,7 @@ namespace orcplan
                         cid[colCINFO_TOS] = GetDateTimeEvent(firstEvent);
                     }
 
-                    firstEvent[colOINFO_STATE] = OINFO_STATE.ENDED;
+                    firstEvent[colOINFO_STATE] = stateNext = OINFO_STATE.ENDED;
                     firstEvent[colOINFO_TE] = dtEvent;
                     break;
 
@@ -459,6 +479,7 @@ namespace orcplan
             }
 
             nextPlan.AcceptChanges();
+            return stateNext;
         }
 
         private static void InsertBgnnOrder(DataRow dataRow, DataSet nextPlan)
