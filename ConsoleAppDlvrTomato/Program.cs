@@ -122,6 +122,7 @@ namespace orcplan
         {
             switch(stateNext)
             {
+                case OINFO_STATE.BEGINNING:
                 case OINFO_STATE.COOKING:
                 case OINFO_STATE.READY:
                 case OINFO_STATE.PLACING:
@@ -590,7 +591,7 @@ namespace orcplan
 
             dir = ExtendDirByCount(dir);
 
-            if(Directory.Exists(dir))
+            if (Directory.Exists(dir))
             {
                 dir += "(" + Path.GetRandomFileName() + ")";
             }
@@ -637,44 +638,33 @@ namespace orcplan
 
             //PlanningForTunning(dir + Path.DirectorySeparatorChar, deliveryPlan);
 
-            //MAX_BEGINING_ORDERS_TO_ADD???
-            DataRow[] beginningOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
-            {
-                DateTime newStart = (DateTime)row[colOINFO_TC] + TimeSpan.FromTicks(Math.Abs(((TimeSpan)row[colOINFO_TD]).Ticks) / 2);
-                bool isStart = (((TimeSpan)row[colOINFO_TD]).Ticks < 0) && ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING) && (newStart < buildt);
-
-                TimeSpan timeForReady = (DateTime)row[colOINFO_TR] - (DateTime)row[colOINFO_TC];
-                if (isStart)
-                {
-                    row[colOINFO_TC] = buildt;
-                    row[colOINFO_TR] = buildt + timeForReady;
-                    //row[colORDERS_RID] = deliveryPlan.Tables[tblRINFO].Rows[0][colRINFO_RID];
-                    //row[colORDERS_CID] = deliveryPlan.Tables[tblCINFO].Rows[0][colCINFO_CID];
-                }
-                else
-                {
-                    //row[colOINFO_TC] = newStart;
-                    //row[colOINFO_TR] = newStart + timeForReady;
-                }
-                return isStart;
-            }).ToArray<DataRow>();
-            deliveryPlan.AcceptChanges();
+            // 20190503 DataRow[] beginningOrders = GetBeginningOrders(deliveryPlan, buildt);
 
             //beginningOrders.C
 
-            foreach (DataRow ord in beginningOrders)
-            {
-                string dirOID = Path.Combine(dir, ord[colOINFO_OID].ToString());
-                Directory.CreateDirectory(dirOID);
-                PlanningForCartesian(dirOID + Path.DirectorySeparatorChar, 0, deliveryPlan, new DataRow[] { ord });
-            }
+            // 20190503 TryBeginningOrders(deliveryPlan, dir, beginningOrders);
+            
+            DataSet dlvrPlan = deliveryPlan.Copy();
 
-            DataRow[] bgnnOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
+            DataRow[] bgnnOrders = dlvrPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
             {
-                return ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING) && (((TimeSpan)row[colOINFO_TD]) >= TimeSpan.FromTicks(0));
+                return ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING);
             }).ToArray<DataRow>();
 
-            PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+            DataRow[] bgnnOrdersReadyToStart = bgnnOrders;
+
+            do
+            {
+                bgnnOrders = bgnnOrdersReadyToStart;
+                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, dlvrPlan, bgnnOrders);
+
+                bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
+                {
+                    return (((TimeSpan)row[colOINFO_TD]) >= TimeSpan.FromTicks(0));
+                }).ToArray<DataRow>();
+
+            }
+            while (bgnnOrders.Length != bgnnOrdersReadyToStart.Length);
 
             //XmlSerializer serialiser1 = new XmlSerializer(typeof(Dictionary<string, string>));
             //TextWriter Filestream1 = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, @"georouteinfo.xml"));
@@ -711,6 +701,43 @@ namespace orcplan
             File.AppendAllText("executionLOG.tsv", $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
             return TheBestDeliveryPlan;
+        }
+
+        private static void TryBeginningOrders(DataSet deliveryPlan, string dir, DataRow[] beginningOrders)
+        {
+            foreach (DataRow ord in beginningOrders)
+            {
+                string dirOID = Path.Combine(dir, ord[colOINFO_OID].ToString());
+                Directory.CreateDirectory(dirOID);
+                PlanningForCartesian(dirOID + Path.DirectorySeparatorChar, 0, deliveryPlan, new DataRow[] { ord });
+            }
+        }
+
+        private static DataRow[] GetBeginningOrders(DataSet deliveryPlan, DateTime buildt)
+        {
+            //MAX_BEGINING_ORDERS_TO_ADD???
+            DataRow[] beginningOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
+            {
+                DateTime newStart = (DateTime)row[colOINFO_TC] + TimeSpan.FromTicks(Math.Abs(((TimeSpan)row[colOINFO_TD]).Ticks) / 2);
+                bool isStart = (((TimeSpan)row[colOINFO_TD]).Ticks < 0) && ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING) && (newStart < buildt);
+
+                TimeSpan timeForReady = (DateTime)row[colOINFO_TR] - (DateTime)row[colOINFO_TC];
+                if (isStart)
+                {
+                    row[colOINFO_TC] = buildt;
+                    row[colOINFO_TR] = buildt + timeForReady;
+                    //row[colORDERS_RID] = deliveryPlan.Tables[tblRINFO].Rows[0][colRINFO_RID];
+                    //row[colORDERS_CID] = deliveryPlan.Tables[tblCINFO].Rows[0][colCINFO_CID];
+                }
+                else
+                {
+                    //row[colOINFO_TC] = newStart;
+                    //row[colOINFO_TR] = newStart + timeForReady;
+                }
+                return isStart;
+            }).ToArray<DataRow>();
+            deliveryPlan.AcceptChanges();
+            return beginningOrders;
         }
 
         private static string ExtendDirByCount(string dir)
