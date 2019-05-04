@@ -266,7 +266,11 @@ namespace orcplan
             //
             OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
 
-            var planEvents = nextPlan.Tables[tblOINFO].Select().OrderBy<DataRow, DateTime>(row =>
+            var planEvents = nextPlan.Tables[tblOINFO].Select().Where< DataRow > (row =>
+            {
+                return (((OINFO_STATE)row[colOINFO_STATE]) != OINFO_STATE.BEGINNING)
+                || ((((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && (((TimeSpan)row[colOINFO_TD]) >= TimeSpan.FromTicks(0)));
+            }).OrderBy<DataRow, DateTime>(row =>
              {
                  return GetDateTimeEvent(row);
              });
@@ -644,9 +648,9 @@ namespace orcplan
 
             // 20190503 TryBeginningOrders(deliveryPlan, dir, beginningOrders);
             
-            DataSet dlvrPlan = deliveryPlan.Copy();
+            // 20190504 DataSet dlvrPlan = deliveryPlan.Copy();
 
-            DataRow[] bgnnOrders = dlvrPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
+            DataRow[] bgnnOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
             {
                 return ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING);
             }).ToArray<DataRow>();
@@ -656,7 +660,7 @@ namespace orcplan
             do
             {
                 bgnnOrders = bgnnOrdersReadyToStart;
-                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, dlvrPlan, bgnnOrders);
+                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
                 {
@@ -1256,8 +1260,8 @@ namespace orcplan
                         return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.COOKING
                                 || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
                                 || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING
-                                || (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY && bgnnOrders.Contains(row))
-                                || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
+                                || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
+                                || (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING && bgnnOrders.Contains(row)))
                                 && row[colOINFO_CID].ToString() == cInfo[colCINFO_CID].ToString();
                     }
                 }).OrderBy<DataRow, DateTime>(row =>
