@@ -1262,123 +1262,146 @@ namespace orcplan
         {
             return () =>
             {
-                LinkedList<string> routeList = new LinkedList<string>();
-
-                DataRow[] planOrders = deliveryPlan.Tables[tblOINFO].Select().Where(row =>
+                try
                 {
-                    if (row is null) return false;
+                    // Change the thread priority to the one required.
+                    Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
 
-                    lock (row)
-                    {
-                        return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.COOKING
-                                || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
-                                || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING
-                                || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
-                                || (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING && bgnnOrders.Contains(row)))
-                                && row[colOINFO_CID].ToString() == cInfo[colCINFO_CID].ToString();
-                    }
-                }).OrderBy<DataRow, DateTime>(row =>
-                {
-                    lock (row)
-                    {
-                        return (DateTime)row[colOINFO_TR];
-                    }
-                }).ToArray();
-
-                string currRID = String.Empty;
-                LinkedListNode<string> ridNode = null;
-                LinkedListNode<string> oidNode = null;
-
-                foreach (DataRow oInfo in planOrders)
-                {
-                    lock (oInfo)
-                    {
-                        if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
-                        {
-                            if (((CINFO_STATE)cInfo[colCINFO_STATE]) == CINFO_STATE.ONROAD)
-                            {
-                                routeList.AddFirst(new LinkedListNode<string>(oInfo[colOINFO_OID].ToString()));
-                                continue;
-                            }
-                        }
-
-                        string ridID = oInfo[colOINFO_RID].ToString();
-                        if (ridID != currRID)
-                        {
-                            ridNode = null;
-                            oidNode = null;
-
-                            if (!String.IsNullOrEmpty(currRID))
-                            {
-                                routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
-                            }
-
-                            if (((OINFO_STATE)oInfo[colOINFO_STATE]) != OINFO_STATE.TRANSPORTING)
-                            {
-                                ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[{oInfo[colOINFO_OID].ToString()}]");
-                                routeList.AddLast(ridNode);
-                            }
-                            else
-                            { // state of order is OINFO_STATE.TRANSPORTING
-                                if (((CINFO_STATE)cInfo[colCINFO_STATE]) != CINFO_STATE.ONROAD)
-                                {
-                                    ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
-                                    routeList.AddLast(ridNode);
-                                }
-                            }
-
-                            oidNode = new LinkedListNode<string>(oInfo[colOINFO_OID].ToString());
-                            routeList.AddLast(oidNode);
-
-                            currRID = ridID;
-                        }
-                        else
-                        {
-                            if (((OINFO_STATE)oInfo[colOINFO_STATE]) != OINFO_STATE.TRANSPORTING)
-                            {
-                                LinkedListNode<string> nodeRID = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[{oInfo[colOINFO_OID].ToString()}]");
-                                if (ridNode == null)
-                                {
-                                    routeList.AddFirst(nodeRID);                             
-                                }
-                                else
-                                {
-                                    routeList.AddAfter(ridNode, nodeRID);
-                                }
-                                ridNode = nodeRID;
-                            }
-                            else
-                            { // state of order is OINFO_STATE.TRANSPORTING and state of courier isn't CINFO_STATE.ONROAD
-                                LinkedListNode<string> nodeRID = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
-                                routeList.AddAfter(ridNode, nodeRID);
-                                ridNode = nodeRID;
-                            }
-
-                            LinkedListNode<string> nodeOID = new LinkedListNode<string>(oInfo[colOINFO_OID].ToString());
-                            routeList.AddAfter(oidNode, nodeOID);
-                            oidNode = nodeOID;
-                        }
-                    }
+                    BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, cInfo);
                 }
-
-                if (!String.IsNullOrEmpty(currRID))
+                finally
                 {
-                    routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
-                }
-
-                string route = routeList.Aggregate<string, string, string>("", (a, b) => String.Concat(a, "-", b), a => a) + "-";
-
-                lock (deliveryPlan)
-                {
-                    int routeLength = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
-                    //deliveryPlan.AcceptChanges();
-
-                    cInfo[colCINFO_ROUTE] = route;
-                    cInfo[colCINFO_ROUTELENGTH] = routeLength;
+                    // Restore the thread default priority.
+                    Thread.CurrentThread.Priority = ThreadPriority.Normal;
                 }
 
                 return true;
             };
+        }
+
+        private static void BuildRouteForCinfoInternal(DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo)
+        {
+            LinkedList<string> routeList = new LinkedList<string>();
+
+            DataRow[] planOrders = deliveryPlan.Tables[tblOINFO].Select().Where(row =>
+            {
+                if (row is null) return false;
+
+                lock (row)
+                {
+                    return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.COOKING
+                            || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
+                            || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING
+                            || ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.READY
+                            || (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING && bgnnOrders.Contains(row)))
+                            && row[colOINFO_CID].ToString() == cInfo[colCINFO_CID].ToString();
+                }
+            }).OrderBy<DataRow, DateTime>(row =>
+            {
+                lock (row)
+                {
+                    return (DateTime)row[colOINFO_TR];
+                }
+            }).ToArray();
+
+            string currRID = String.Empty;
+            LinkedListNode<string> ridNode = null;
+            LinkedListNode<string> oidNode = null;
+
+            foreach (DataRow oInfo in planOrders)
+            {
+                lock (oInfo)
+                {
+                    if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
+                    {
+                        if (((CINFO_STATE)cInfo[colCINFO_STATE]) == CINFO_STATE.ONROAD)
+                        {
+                            routeList.AddFirst(new LinkedListNode<string>(oInfo[colOINFO_OID].ToString()));
+                            continue;
+                        }
+                    }
+
+                    string ridID = oInfo[colOINFO_RID].ToString();
+                    if (ridID != currRID)
+                    {
+                        ridNode = null;
+                        oidNode = null;
+
+                        if (!String.IsNullOrEmpty(currRID))
+                        {
+                            // dis routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
+                        }
+
+                        if (((OINFO_STATE)oInfo[colOINFO_STATE]) != OINFO_STATE.TRANSPORTING)
+                        {
+                            ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[{oInfo[colOINFO_OID].ToString()}]");
+                            routeList.AddLast(ridNode);
+                        }
+                        else
+                        { // state of order is OINFO_STATE.TRANSPORTING
+                            if (((CINFO_STATE)cInfo[colCINFO_STATE]) != CINFO_STATE.ONROAD)
+                            {
+                                ridNode = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
+                                routeList.AddLast(ridNode);
+                            }
+                        }
+
+                        oidNode = new LinkedListNode<string>(oInfo[colOINFO_OID].ToString());
+                        routeList.AddLast(oidNode);
+
+                        currRID = ridID;
+                    }
+                    else
+                    {
+                        if (((OINFO_STATE)oInfo[colOINFO_STATE]) != OINFO_STATE.TRANSPORTING)
+                        {
+                            LinkedListNode<string> nodeRID = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[{oInfo[colOINFO_OID].ToString()}]");
+                            if (ridNode == null)
+                            {
+                                routeList.AddFirst(nodeRID);
+                            }
+                            else
+                            {
+                                routeList.AddAfter(ridNode, nodeRID);
+                            }
+                            ridNode = nodeRID;
+                        }
+                        else
+                        { // state of order is OINFO_STATE.TRANSPORTING and state of courier isn't CINFO_STATE.ONROAD
+                            LinkedListNode<string> nodeRID = new LinkedListNode<string>($"{oInfo[colOINFO_RID].ToString()}[]");
+                            routeList.AddAfter(ridNode, nodeRID);
+                            ridNode = nodeRID;
+                        }
+
+                        LinkedListNode<string> nodeOID = new LinkedListNode<string>(oInfo[colOINFO_OID].ToString());
+                        routeList.AddAfter(oidNode, nodeOID);
+                        oidNode = nodeOID;
+                    }
+                }
+            }
+
+            if (!String.IsNullOrEmpty(currRID))
+            {
+                // dis routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
+            }
+
+            routeList = TunningRouteList(routeList);
+
+            string route = routeList.Aggregate<string, string, string>("", (a, b) => String.Concat(a, "-", b), a => a) + "-";
+
+            lock (deliveryPlan)
+            {
+                int routeLength = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
+                //deliveryPlan.AcceptChanges();
+
+                cInfo[colCINFO_ROUTE] = route;
+                cInfo[colCINFO_ROUTELENGTH] = routeLength;
+            }
+        }
+
+        private static LinkedList<string> TunningRouteList(LinkedList<string> routeList)
+        {
+            return routeList;
         }
 
         private static Func<bool> BuildRouteForCinfo(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo)
