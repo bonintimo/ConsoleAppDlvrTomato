@@ -611,13 +611,16 @@ namespace orcplan
             appLog.WriteLine($"MAX_ORDERS_FOR_COURIERS: {MAX_ORDERS_FOR_COURIERS}");
             appLog.WriteLine($"BEGIN DATETIME: {beginDateTime}");
 
-            List<DataRow> listPnts = new List<DataRow>(deliveryPlan.Tables[tblOINFO].Select());
-            listPnts.AddRange(deliveryPlan.Tables[tblRINFO].Select());
-            listPnts.AddRange(deliveryPlan.Tables[tblCINFO].Select());
+            if (false)
+            {
+                List<DataRow> listPnts = new List<DataRow>(deliveryPlan.Tables[tblOINFO].Select());
+                listPnts.AddRange(deliveryPlan.Tables[tblRINFO].Select());
+                listPnts.AddRange(deliveryPlan.Tables[tblCINFO].Select());
 
-            TspTour tour = TspDoTsp(listPnts, false, true);
+                TspTour tour = TspDoTsp(listPnts, false, true);
 
-            TspRouteLength = (long)Math.Round(tour.Cost());
+                TspRouteLength = (long)Math.Round(tour.Cost());
+            }
 
             appLog.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
             appLog.WriteLine();
@@ -1265,7 +1268,7 @@ namespace orcplan
                 try
                 {
                     // Change the thread priority to the one required.
-                    Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
+                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
 
                     BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, cInfo);
                 }
@@ -1278,6 +1281,12 @@ namespace orcplan
                 return true;
             };
         }
+
+        //private class RoutePoint
+        //{
+        //    public DataRow OinfoRow { get; set; }
+        //    public DataRow RinfoRow { get; set; }
+        //}
 
         private static void BuildRouteForCinfoInternal(DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo)
         {
@@ -1385,7 +1394,7 @@ namespace orcplan
                 // dis routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
             }
 
-            routeList = TunningRouteList(routeList);
+            routeList = TunningRouteList(cInfo, deliveryPlan, routeList);
 
             string route = routeList.Aggregate<string, string, string>("", (a, b) => String.Concat(a, "-", b), a => a) + "-";
 
@@ -1399,9 +1408,53 @@ namespace orcplan
             }
         }
 
-        private static LinkedList<string> TunningRouteList(LinkedList<string> routeList)
+        private static LinkedList<string> TunningRouteList(DataRow cInfo, DataSet deliveryPlan, LinkedList<string> routeList)
         {
-            return routeList;
+            DataTable OINFO = deliveryPlan.Tables[tblOINFO];
+            DataTable RINFO = deliveryPlan.Tables[tblRINFO];
+            DataTable CINFO = deliveryPlan.Tables[tblCINFO];
+
+            LinkedList<string> routeTunning = new LinkedList<string>();
+            List<DataRow> listPnts = new List<DataRow>();
+            listPnts.Add(cInfo);
+
+            for (LinkedListNode<string> idxLinked = routeList.First; idxLinked != null; idxLinked = idxLinked.Next)
+            {
+                string[] dst = idxLinked.Value.Split("[]".ToCharArray());
+                if (dst.Length > 1)
+                {
+                    if (listPnts.Count > 1) TspAndAdd(listPnts, routeTunning);
+
+                    routeTunning.AddLast(idxLinked.Value);
+
+                    DataRow RinfoRow = RINFO.Rows.Find(dst[0]);
+                    listPnts = new List<DataRow>();
+                    listPnts.Add(RinfoRow);
+                }
+                else
+                {
+                    DataRow OrdersRow = OINFO.Rows.Find(dst[0]);
+                    listPnts.Add(OrdersRow);
+                }
+
+
+                //routeTunning.AddLast(idxLinked.Value);
+            }
+            if (listPnts.Count > 1) TspAndAdd(listPnts, routeTunning);
+
+            return routeTunning;
+        }
+
+        private static void TspAndAdd(List<DataRow> listPnts, LinkedList<string> routeTunning)
+        {
+            TspTour tour = TspDoTsp(listPnts, false, true);
+
+            TspStop[] stops = tour.Cycle().ToArray();
+
+            for (int i = 1; i < stops.Length; i++)
+            {
+                routeTunning.AddLast(stops[i].City.CityID);
+            }
         }
 
         private static Func<bool> BuildRouteForCinfo(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo)
@@ -1798,7 +1851,7 @@ namespace orcplan
             WatchPlanningForCinfo.Start();
             //throw new NotImplementedException();
 
-            if (totalRouteLength > TspRouteLength) return;
+            // 20190506 if (totalRouteLength > TspRouteLength) return;
 
             DataTable ORDERS = deliveryPlan.Tables[tblOINFO];
             DataTable CINFO = deliveryPlan.Tables[tblCINFO];
