@@ -767,7 +767,7 @@ namespace orcplan
 
             scriptPlan.AppendLine("ymaps.ready(init);");
             scriptPlan.AppendLine("function init() { var myMap = new ymaps.Map(\"map\", { center: [54.206134, 37.669204], zoom: 13, controls: ['smallMapDefaultSet'] }, { searchControlProvider: 'yandex#search' });");
-            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"].ToString()}\"), {{float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])}\"), {{float: 'right'}});");
             scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\"), {{float: 'right'}});");
 
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
@@ -831,7 +831,8 @@ namespace orcplan
                 coords += $",[{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LAT].ToString()},{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LNG].ToString()}]";
 
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3 }} ));");
-                scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3 }} ));");
+                scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 5, strokeOpacity: 0.1 }} ));");
+                scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{ boundsAutoApply: false }}));");
                 scriptPlan.AppendLine($"function addColl{hashCode}() {{ myMap.geoObjects.add(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"function delColl{hashCode}() {{ myMap.geoObjects.remove(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"addColl{hashCode}();");
@@ -839,7 +840,6 @@ namespace orcplan
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(animLine);");
                 //scriptPlan.AppendLine($"function playAnimation() {{ animLine.animate().then(function(){{return ymaps.vow.delay(null, 2000);}}).then(function(){{playAnimation();}}); }}");
                 //scriptPlan.AppendLine($"playAnimation(); }}");
-                //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{ boundsAutoApply: false }}));");
                 scriptPlan.AppendLine("}");
             }
 
