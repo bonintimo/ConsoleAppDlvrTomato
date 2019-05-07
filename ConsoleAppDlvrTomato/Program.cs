@@ -25,7 +25,7 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 3;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_COURIERS_FOR_PLANNING = 5;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 6;
 
@@ -64,7 +64,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C6.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -766,7 +766,7 @@ namespace orcplan
             scriptPlan.AppendLine("<script type=\"text/javascript\">");
 
             scriptPlan.AppendLine("ymaps.ready(init);");
-            scriptPlan.AppendLine("function init() { var myMap = new ymaps.Map(\"map\", { center: [54.206134, 37.669204], zoom: 14, controls: ['smallMapDefaultSet'] }, { searchControlProvider: 'yandex#search' });");
+            scriptPlan.AppendLine("function init() { var myMap = new ymaps.Map(\"map\", { center: [54.206134, 37.669204], zoom: 13, controls: ['smallMapDefaultSet'] }, { searchControlProvider: 'yandex#search' });");
             scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"].ToString()}\"), {{float: 'right'}});");
             scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\"), {{float: 'right'}});");
 
