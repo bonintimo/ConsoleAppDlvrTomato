@@ -374,8 +374,8 @@ namespace orcplan
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                     if (ddd == 0) return true;
 
@@ -1099,8 +1099,8 @@ namespace orcplan
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                     if (ddd < minRinfo)
                     {
@@ -1119,8 +1119,8 @@ namespace orcplan
 
                             //int dddCinfo = int.Parse(jsonCinfo["result"][0]["duration"].ToString());
                             //int lllCinfo = int.Parse(jsonCinfo["result"][0]["length"].ToString());
-                            int dddCinfo = (int)distBetCinfo;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                            int lllCinfo = (int)distBetCinfo / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                            int dddCinfo = (int)distBetCinfo / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                            int lllCinfo = (int)distBetCinfo;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                             if (ddd < minCinfo)
                             {
@@ -1754,8 +1754,8 @@ namespace orcplan
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
                 //return latD * latD + lngD * lngD;
 
                 DateTime sortDateTime = buildt.AddSeconds(ddd);
@@ -1782,8 +1782,8 @@ namespace orcplan
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd_internal = (int)distBetInternal;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll_internal = (int)distBetInternal / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd_internal = (int)distBetInternal / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    int lll_internal = (int)distBetInternal;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                     DateTime sortDateTime_internal = ((DateTime)ord[colOINFO_TE]).AddSeconds(ddd_internal);
 
@@ -1823,8 +1823,8 @@ namespace orcplan
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
                 //return latD * latD + lngD * lngD;
                 return buildt.AddSeconds(ddd); // + duration of cooking...
             });
@@ -2334,8 +2334,8 @@ namespace orcplan
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                 len += lll;
 
@@ -2384,8 +2384,8 @@ namespace orcplan
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                 //len += lll;
             }
@@ -2925,8 +2925,8 @@ namespace orcplan
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distanceBetween; //int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distanceBetween / 14; //int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)distanceBetween / 14; //int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                int lll = (int)distanceBetween; //int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
 
                 return lll;
 
