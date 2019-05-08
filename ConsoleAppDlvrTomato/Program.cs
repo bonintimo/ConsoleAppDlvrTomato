@@ -25,9 +25,9 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 5;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 6;
+        public static int MAX_ORDERS_FOR_COURIERS = 5;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -64,7 +64,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -848,7 +848,7 @@ namespace orcplan
 
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3 }} ));");
                 scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 3, strokeOpacity: 0.3 }} ));");
-                scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 2 }} }}, {{ boundsAutoApply: false }}));");
+                scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{  wayPointVisible:false, viaPointVisible:false,  pinVisible:false, boundsAutoApply: false }}));");
                 scriptPlan.AppendLine($"function addColl{hashCode}() {{ myMap.geoObjects.add(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"function delColl{hashCode}() {{ myMap.geoObjects.remove(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"addColl{hashCode}();");
