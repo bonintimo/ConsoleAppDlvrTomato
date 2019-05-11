@@ -42,7 +42,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -64,7 +64,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -788,13 +788,16 @@ namespace orcplan
 
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
             {
+                TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
+                string tdfrmt = td < TimeSpan.Zero? td.ToString(@"\(hh\:mm\)"): td.ToString(@"hh\:mm");
+
                 if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
                 {
-                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconCaption: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenDotIconWithCaption'}} ));");
+                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconCaption: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenDotIconWithCaption'}} ));");
                 }
                 else
                 {
-                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
+                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
                 }
             }
 
@@ -807,9 +810,9 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]}\");");
+                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(btn{hashCode}.isSelected()) {{ addColl{hashCode}(); }} else {{ delColl{hashCode}(); }} }});");
-                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{float: 'right'}});");
+                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
@@ -1446,11 +1449,18 @@ namespace orcplan
                     DataRow RinfoRow = RINFO.Rows.Find(dst[0]);
                     listPnts = new List<DataRow>();
                     listPnts.Add(RinfoRow);
+                    if (RinfoRow is null) throw new Exception();
                 }
                 else
                 {
                     DataRow OrdersRow = OINFO.Rows.Find(dst[0]);
+                    if (OrdersRow is null)
+                    {
+                        Thread.Sleep(10);
+                        OrdersRow = OINFO.Rows.Find(dst[0]);
+                    }
                     listPnts.Add(OrdersRow);
+                    if (OrdersRow is null) throw new Exception();
                 }
 
 
