@@ -25,7 +25,7 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 1;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 6;
 
@@ -64,7 +64,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -663,6 +663,7 @@ namespace orcplan
             do
             {
                 bgnnOrders = bgnnOrdersReadyToStart;
+                TheBestDeliveryPlan = null;// deliveryPlan;
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
@@ -781,10 +782,10 @@ namespace orcplan
             scriptPlan.AppendLine($"function init() {{ var myMap = new ymaps.Map(\"map\", {{ center: [{planCenterLat}, {planCenterLng}], zoom: 13, controls: ['smallMapDefaultSet'] }}, {{ searchControlProvider: 'yandex#search' }});");
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
-            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])}\"), {{float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])}\"), {{maxWidth:200, float: 'right'}});");
             scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
-            scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:200, float: 'right'}});");
 
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
             {
@@ -812,7 +813,7 @@ namespace orcplan
                 scriptPlan.AppendLine("{");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(btn{hashCode}.isSelected()) {{ addColl{hashCode}(); }} else {{ delColl{hashCode}(); }} }});");
-                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
+                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
@@ -871,6 +872,8 @@ namespace orcplan
 
 
             File.WriteAllText(v, scriptPlan.ToString());
+
+            System.Diagnostics.Process.Start(v);
         }
 
         private static object DispOrderState(OINFO_STATE oRDER_STATE)
