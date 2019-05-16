@@ -24,7 +24,7 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 6;
@@ -811,8 +811,8 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]}\");");
-                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(btn{hashCode}.isSelected()) {{ addColl{hashCode}(); }} else {{ delColl{hashCode}(); }} }});");
+                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
+                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(btn{hashCode}.isSelected()) {{ addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 200);}} else {{ delColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); }} }});");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
