@@ -24,10 +24,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
+        public static int MAX_COURIERS_FOR_PLANNING = 1;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 6;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -782,7 +782,7 @@ namespace orcplan
             scriptPlan.AppendLine($"function init() {{ var myMap = new ymaps.Map(\"map\", {{ center: [{planCenterLat}, {planCenterLng}], zoom: 13, controls: ['smallMapDefaultSet'] }}, {{ searchControlProvider: 'yandex#search' }});");
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
-            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])}\"), {{maxWidth:200, float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
             scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:200, float: 'right'}});");
@@ -790,7 +790,7 @@ namespace orcplan
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
             {
                 TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
-                string tdfrmt = td < TimeSpan.Zero? td.ToString(@"\(hh\:mm\)"): td.ToString(@"hh\:mm");
+                string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
 
                 if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
                 {
@@ -802,12 +802,12 @@ namespace orcplan
                 }
             }
 
-            foreach(DataRow rInfo in theBestDeliveryPlan.Tables[tblRINFO].Rows)
+            foreach (DataRow rInfo in theBestDeliveryPlan.Tables[tblRINFO].Rows)
             {
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
             }
 
-            foreach(DataRow cInfo in theBestDeliveryPlan.Tables[tblCINFO].Rows)
+            foreach (DataRow cInfo in theBestDeliveryPlan.Tables[tblCINFO].Rows)
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
@@ -873,7 +873,10 @@ namespace orcplan
 
             File.WriteAllText(v, scriptPlan.ToString());
 
-            System.Diagnostics.Process.Start(v);
+            {
+                System.Diagnostics.Process.Start(v);
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+            }
         }
 
         private static object DispOrderState(OINFO_STATE oRDER_STATE)
