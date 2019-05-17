@@ -24,14 +24,16 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 6;
 
         private static List<Task> taskList = new List<Task>();
 
         private static DateTime TimeOfSimulation = DateTime.MinValue;
+
+        private static DateTime PriorTimeSimulation = DateTime.MinValue;
 
         public static void Main(string[] args)
         {
@@ -288,6 +290,8 @@ namespace orcplan
                 }
                 else
                 {
+                    WaitSimulationFor(dtEvent);
+
                     stateNext = DoNextState(firstEvent, nextPlan, dtEvent);
                     nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = dtEvent;
                     nextPlan.AcceptChanges();
@@ -306,6 +310,21 @@ namespace orcplan
             UpdateCourierState(nextPlan);
 
             return stateNext;
+        }
+
+        private static void WaitSimulationFor(DateTime dtEvent)
+        {
+            TimeSpan span = dtEvent - PriorTimeSimulation;
+
+            if (span > TimeSpan.Zero)
+            {
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 8);
+
+                Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
+                Thread.Sleep(w);
+            }
+
+            PriorTimeSimulation = dtEvent;
         }
 
         private static void UpdateCourierState(DataSet nextPlan)
@@ -397,7 +416,17 @@ namespace orcplan
 
         private static OINFO_STATE InsertBeginningOrderToPlan(DataSet nextPlan)
         {
-            nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = (DateTime)BgnnOrders.Rows[0]["TB"];
+            DateTime tb = (DateTime)BgnnOrders.Rows[0]["TB"];
+            nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = tb;
+
+            if (PriorTimeSimulation > DateTime.MinValue)
+            {
+                WaitSimulationFor(tb);
+            }
+            else
+            {
+                PriorTimeSimulation = tb;
+            }
 
             InsertBgnnOrder(BgnnOrders.Rows[0], nextPlan);
             BgnnOrders.Rows.RemoveAt(0);
