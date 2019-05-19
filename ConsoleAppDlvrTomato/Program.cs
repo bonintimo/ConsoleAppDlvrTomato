@@ -25,9 +25,9 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 4;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 6;
+        public static int MAX_ORDERS_FOR_COURIERS = 10;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -125,9 +125,11 @@ namespace orcplan
             switch(stateNext)
             {
                 case OINFO_STATE.BEGINNING:
-                case OINFO_STATE.COOKING:
+                //case OINFO_STATE.COOKING:
                 case OINFO_STATE.READY:
+                case OINFO_STATE.TRANSPORTING:
                 case OINFO_STATE.PLACING:
+                //case OINFO_STATE.ENDED:
                     return true;
                     break;
             }
@@ -318,7 +320,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 8);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 16);
 
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
                 Thread.Sleep(w);
@@ -818,6 +820,9 @@ namespace orcplan
 
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
             {
+                int hashCode = oInfo.GetHashCode();
+                scriptPlan.AppendLine("{");
+
                 TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
                 string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
 
@@ -829,6 +834,10 @@ namespace orcplan
                 {
                     scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
                 }
+                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {oInfo[colOINFO_TB]}\");");
+                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
+
+                scriptPlan.AppendLine("}");
             }
 
             foreach (DataRow rInfo in theBestDeliveryPlan.Tables[tblRINFO].Rows)
@@ -840,11 +849,11 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
+                scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
-                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(btn{hashCode}.isSelected()) {{ addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 200);}} else {{ delColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); }} }});");
+                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(!btn{hashCode}.isSelected()) {{ delColl{hashCode}(); addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); myMap.setBounds(coll{hashCode}.getBounds()); }} else {{ btn{hashCode}.options.set('maxWidth', 200); }} }});");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
-                scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
                 scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
 
