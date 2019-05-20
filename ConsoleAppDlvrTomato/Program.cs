@@ -24,10 +24,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 4;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
+        public static int MAX_COURIERS_FOR_PLANNING = 1;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 10;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -66,7 +66,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -813,7 +813,7 @@ namespace orcplan
             scriptPlan.AppendLine($"function init() {{ var myMap = new ymaps.Map(\"map\", {{ center: [{planCenterLat}, {planCenterLng}], zoom: 13, controls: ['smallMapDefaultSet'] }}, {{ searchControlProvider: 'yandex#search' }});");
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
-            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
             scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:200, float: 'right'}});");
@@ -834,7 +834,14 @@ namespace orcplan
                 {
                     scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
                 }
-                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {oInfo[colOINFO_TB]}\");");
+
+                string ordrTimes = ((DateTime)oInfo[colOINFO_TB]).ToString("HH:mm")
+                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.BEGINNING)?"B":" ") + ((DateTime)oInfo[colOINFO_TC]).ToString("HH:mm")
+                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.COOKING) ? "C" : " ") + ((DateTime)oInfo[colOINFO_TR]).ToString("HH:mm")
+                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.READY) ? "R" : " ") + ((DateTime)oInfo[colOINFO_TT]).ToString("HH:mm")
+                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? "T" : " ") + ((DateTime)oInfo[colOINFO_TP]).ToString("HH:mm")
+                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? "P" : " ") + ((DateTime)oInfo[colOINFO_TE]).ToString("HH:mm");
+                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {ordrTimes}\");");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
 
                 scriptPlan.AppendLine("}");
