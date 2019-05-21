@@ -27,7 +27,7 @@ namespace orcplan
         public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
         public static int MAX_COURIERS_FOR_PLANNING = 1;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 6;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -813,43 +813,32 @@ namespace orcplan
             scriptPlan.AppendLine($"function init() {{ var myMap = new ymaps.Map(\"map\", {{ center: [{planCenterLat}, {planCenterLng}], zoom: 13, controls: ['smallMapDefaultSet'] }}, {{ searchControlProvider: 'yandex#search' }});");
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
-            scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
-            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
+            //scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
+            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
-            scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:200, float: 'right'}});");
+            scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:2000, float: 'right'}});");
 
-            foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Rows)
+            int btnPosition = 200;
+
+            foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Select().Where(r => { return ((TimeSpan)r[colOINFO_TD]) < TimeSpan.Zero; }))
             {
-                int hashCode = oInfo.GetHashCode();
-                scriptPlan.AppendLine("{");
-
-                TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
-                string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
-
-                if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
-                {
-                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconCaption: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenDotIconWithCaption'}} ));");
-                }
-                else
-                {
-                    scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
-                }
-
-                string ordrTimes = ((DateTime)oInfo[colOINFO_TB]).ToString("HH:mm")
-                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.BEGINNING)?"B":" ") + ((DateTime)oInfo[colOINFO_TC]).ToString("HH:mm")
-                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.COOKING) ? "C" : " ") + ((DateTime)oInfo[colOINFO_TR]).ToString("HH:mm")
-                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.READY) ? "R" : " ") + ((DateTime)oInfo[colOINFO_TT]).ToString("HH:mm")
-                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? "T" : " ") + ((DateTime)oInfo[colOINFO_TP]).ToString("HH:mm")
-                    + ((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? "P" : " ") + ((DateTime)oInfo[colOINFO_TE]).ToString("HH:mm");
-                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {ordrTimes}\");");
-                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
-
-                scriptPlan.AppendLine("}");
+                btnPosition = ScriptPlanAddOrder(btnPosition, scriptPlan, oInfo);
             }
 
             foreach (DataRow rInfo in theBestDeliveryPlan.Tables[tblRINFO].Rows)
             {
-                scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
+                int hashCode = rInfo.GetHashCode();
+                scriptPlan.AppendLine("{");
+                //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
+                scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{rInfo[colRINFO_RID]}\");");
+                scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {btnPosition}, bottom: 'auto' }} }});");
+                btnPosition += 35;
+                scriptPlan.AppendLine("}");
+
+                foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Select().Where(r => { return (((TimeSpan)r[colOINFO_TD]) >= TimeSpan.Zero) && (r[colOINFO_RID].ToString() == rInfo[colRINFO_RID].ToString()); }))
+                {
+                    btnPosition = ScriptPlanAddOrder(btnPosition, scriptPlan, oInfo);
+                }
             }
 
             foreach (DataRow cInfo in theBestDeliveryPlan.Tables[tblCINFO].Rows)
@@ -922,6 +911,39 @@ namespace orcplan
                 System.Diagnostics.Process.Start(v);
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
+        }
+
+        private static int ScriptPlanAddOrder(int btnPos, StringBuilder scriptPlan, DataRow oInfo)
+        {
+            int hashCode = oInfo.GetHashCode();
+            scriptPlan.AppendLine("{");
+
+            TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
+            string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
+
+            if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.BEGINNING)
+            {
+                scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconCaption: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenDotIconWithCaption'}} ));");
+            }
+            else
+            {
+                scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
+            }
+
+            string ordrTimes = ((DateTime)oInfo[colOINFO_TB]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.BEGINNING) ? "(HH:mm)" : " HH:mm "))
+                + ((DateTime)oInfo[colOINFO_TC]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.COOKING) ? "(HH:mm)" : " HH:mm "))
+                + ((DateTime)oInfo[colOINFO_TR]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.READY) ? "(HH:mm)" : " HH:mm "))
+                + ((DateTime)oInfo[colOINFO_TT]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? "(HH:mm)" : " HH:mm "))
+                + ((DateTime)oInfo[colOINFO_TP]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? "(HH:mm)" : " HH:mm "))
+                + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? "(HH:mm)" : " HH:mm"));
+            scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {ordrTimes}\");");
+            //scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
+            scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 15, right: 'auto', top: {btnPos}, bottom: 'auto' }} }});");
+            btnPos += 35;
+
+            scriptPlan.AppendLine("}");
+
+            return btnPos;
         }
 
         private static object DispOrderState(OINFO_STATE oRDER_STATE)
