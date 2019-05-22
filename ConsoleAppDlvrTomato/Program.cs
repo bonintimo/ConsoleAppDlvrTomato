@@ -66,7 +66,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
