@@ -24,10 +24,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 6;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -35,12 +35,12 @@ namespace orcplan
 
         private static DateTime PriorTimeSimulation = DateTime.MinValue;
 
+        private static string BaseDirectoryForDPR = String.Empty;
+
         public static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             //TspDoTest(args);
-            File.AppendAllText("executionLOG.tsv", "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
-            File.AppendAllText("ordersARCHIVE.tsv", "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
 
             //Console.WriteLine("Hello World!");
 
@@ -66,7 +66,8 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
+                        InitBaseDirForDPR();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -118,6 +119,14 @@ namespace orcplan
             //Task.WaitAll(taskList.ToArray());
 
             //Console.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
+        }
+
+        private static void InitBaseDirForDPR()
+        {
+            BaseDirectoryForDPR = DateTime.Now.ToString("yyyy-MM-dd(HH-mm)");
+            Directory.CreateDirectory(BaseDirectoryForDPR);
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "executionLOG.tsv"), "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "ordersARCHIVE.tsv"), "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
         }
 
         private static bool IsNeedPlanning(OINFO_STATE stateNext)
@@ -497,7 +506,7 @@ namespace orcplan
 
                 case OINFO_STATE.ENDED:
 
-                    File.AppendAllText("ordersARCHIVE.tsv",$"{firstEvent[colOINFO_TB]}\t{firstEvent[colOINFO_TOT]}\t{firstEvent[colOINFO_TP]}\t{firstEvent[colOINFO_TD]}\t{firstEvent[colOINFO_OID]}\t{firstEvent[colOINFO_ADDRESS]}\t{firstEvent[colOINFO_LAT]}\t{firstEvent[colOINFO_LNG]}\t{firstEvent[colOINFO_RID]}\t{firstEvent[colOINFO_TC]}\t{firstEvent[colOINFO_TR]}\t{firstEvent[colOINFO_CID]}\t{firstEvent[colOINFO_TT]}\t{firstEvent[colOINFO_TE]}\n");
+                    File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "ordersARCHIVE.tsv"), $"{firstEvent[colOINFO_TB]}\t{firstEvent[colOINFO_TOT]}\t{firstEvent[colOINFO_TP]}\t{firstEvent[colOINFO_TD]}\t{firstEvent[colOINFO_OID]}\t{firstEvent[colOINFO_ADDRESS]}\t{firstEvent[colOINFO_LAT]}\t{firstEvent[colOINFO_LNG]}\t{firstEvent[colOINFO_RID]}\t{firstEvent[colOINFO_TC]}\t{firstEvent[colOINFO_TR]}\t{firstEvent[colOINFO_CID]}\t{firstEvent[colOINFO_TT]}\t{firstEvent[colOINFO_TE]}\n");
 
                     nextPlan.Tables[tblOINFO].Rows.Remove(firstEvent);
                     break;
@@ -622,7 +631,7 @@ namespace orcplan
             //throw new NotImplementedException();
             DateTime beginDateTime = DateTime.Now;
 
-            string dir = buildt.ToString("yyyy-MM-dd(HH-mm)");
+            string dir = Path.Combine(BaseDirectoryForDPR, buildt.ToString("yyyy-MM-dd(HH-mm)"));
 
             dir = ExtendDirByCount(dir);
 
@@ -633,7 +642,7 @@ namespace orcplan
 
             Directory.CreateDirectory(dir);
 
-            appLog = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{dir}.log"));
+            appLog = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, $"DPL.log"));
 
 
             appLog.WriteLine($"MAX_RESTAURANTS_FOR_PLANNING: {MAX_RESTAURANTS_FOR_PLANNING}");
@@ -737,7 +746,7 @@ namespace orcplan
             int cntTP = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.PLACING).Count();
             int cntTE = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.ENDED).Count();
 
-            File.AppendAllText("executionLOG.tsv", $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "executionLOG.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
             return TheBestDeliveryPlan;
         }
@@ -829,7 +838,7 @@ namespace orcplan
             {
                 int hashCode = rInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
+                scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{rInfo[colRINFO_RID]}\");");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {btnPosition}, bottom: 'auto' }} }});");
                 btnPosition += 35;
@@ -907,8 +916,9 @@ namespace orcplan
 
             File.WriteAllText(v, scriptPlan.ToString());
 
+            if (false)
             {
-                System.Diagnostics.Process.Start(v);
+                Process proc = System.Diagnostics.Process.Start(v);
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
         }
@@ -1401,7 +1411,7 @@ namespace orcplan
             {
                 lock (row)
                 {
-                    return (DateTime)row[colOINFO_TR];
+                    return (DateTime)row[colOINFO_TR] + (TimeSpan)TimeForDeliveringDirect(deliveryPlan, row);
                 }
             }).ToArray();
 
@@ -1498,6 +1508,15 @@ namespace orcplan
                 cInfo[colCINFO_ROUTE] = route;
                 cInfo[colCINFO_ROUTELENGTH] = routeLength;
             }
+        }
+
+        private static TimeSpan TimeForDeliveringDirect(DataSet deliveryPlan, DataRow row)
+        {
+            DataRow rInfo = deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID].ToString());
+
+            double dst = GetGeoPathDistance(rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
+
+            return TimeSpan.FromSeconds(dst / 14);
         }
 
         private static LinkedList<string> TunningRouteList(DataRow cInfo, DataSet deliveryPlan, LinkedList<string> routeList)
@@ -2067,7 +2086,7 @@ namespace orcplan
                 if ((TimeSpan)dr[colOINFO_TD] > TimeSpan.FromTicks(0))
                 {
                     //med += TimeSpan.FromTicks(((TimeSpan)dr[colORDERS_TD]).Ticks / rowsCount);
-                    med += (TimeSpan)dr[colOINFO_TD];
+                    med += ((DateTime)dr[colOINFO_TP]) - ((DateTime)dr[colOINFO_TR]);  //(TimeSpan)dr[colOINFO_TD];
                     rowsCount++;
                 }
                 return true;
