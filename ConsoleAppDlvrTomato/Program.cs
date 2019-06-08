@@ -13,9 +13,31 @@ using System.Diagnostics;
 using System.Threading;
 using System.Globalization;
 using System.Device.Location;
+using System.Activities.Statements;
 
 namespace orcplan
 {
+    //public class RestaurantMachine : StateMachine
+    //{
+    //    public RestaurantMachine()
+    //    {
+    //    }
+
+    //    public override bool Equals(object obj)
+    //    {
+    //        return base.Equals(obj);
+    //    }
+
+    //    public override int GetHashCode()
+    //    {
+    //        return base.GetHashCode();
+    //    }
+
+    //    public override string ToString()
+    //    {
+    //        return base.ToString();
+    //    }
+    //}
 
     enum OINFO_STATE { UNDEFINE = 100, BEGINNING = 110, COOKING = 120, READY = 130, TRANSPORTING = 140, PLACING = 150, ENDED = 160 };
     enum RINFO_STATE { UNDEFINE = 200, OFFLINE = 210, ONLINE = 220, BRAKEDOWN = 230 };
