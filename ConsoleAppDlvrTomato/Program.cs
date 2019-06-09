@@ -46,10 +46,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 10;
-        public static int MAX_COURIERS_FOR_PLANNING = 10;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 10;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -420,14 +420,17 @@ namespace orcplan
 
                 {
                     //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                    //JsonValue json = JsonValue.Parse(r);
+                    string r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                    JsonValue json = JsonValue.Parse(r);
 
-                    double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                    //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                    int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     if (ddd == 0) return true;
 
@@ -1201,14 +1204,17 @@ namespace orcplan
                 {
                     //string r = GetGeoPathTotal2Gis(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
                     //string r = GetGeoPathTotalYandex(DateTime.MinValue, rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
-                    //JsonValue json = JsonValue.Parse(r);
+                    string r = GetGeoPathTotalOSRM(DateTime.MinValue, rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
+                    JsonValue json = JsonValue.Parse(r);
 
-                    double distBet = GetGeoPathDistance(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
+                    //double distBet = GetGeoPathDistance(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                    int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     if (ddd < minRinfo)
                     {
@@ -1221,14 +1227,17 @@ namespace orcplan
                         {
                             //string rCinfo = GetGeoPathTotal2Gis(cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
                             //string rCinfo = GetGeoPathTotalYandex(DateTime.MinValue, cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
-                            //JsonValue jsonCinfo = JsonValue.Parse(rCinfo);
+                            string rCinfo = GetGeoPathTotalOSRM(DateTime.MinValue, cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
+                            JsonValue jsonCinfo = JsonValue.Parse(rCinfo);
 
-                            double distBetCinfo = GetGeoPathDistance(cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
+                            //double distBetCinfo = GetGeoPathDistance(cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
 
                             //int dddCinfo = int.Parse(jsonCinfo["result"][0]["duration"].ToString());
                             //int lllCinfo = int.Parse(jsonCinfo["result"][0]["length"].ToString());
-                            int dddCinfo = (int)distBetCinfo / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                            int lllCinfo = (int)distBetCinfo;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                            //int dddCinfo = (int)distBetCinfo / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                            //int lllCinfo = (int)distBetCinfo;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                            int dddCinfo = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                            int lllCinfo = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                             if (ddd < minCinfo)
                             {
@@ -1536,9 +1545,14 @@ namespace orcplan
         {
             DataRow rInfo = deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID].ToString());
 
-            double dst = GetGeoPathDistance(rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
+            //double dst = GetGeoPathDistance(rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
 
-            return TimeSpan.FromSeconds(dst / 14);
+            string r = GetGeoPathTotalOSRM(DateTime.MinValue, rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
+            JsonValue json = JsonValue.Parse(r);
+            int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+            int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
+
+            return TimeSpan.FromSeconds(ddd);
         }
 
         private static LinkedList<string> TunningRouteList(DataRow cInfo, DataSet deliveryPlan, LinkedList<string> routeList)
@@ -1872,14 +1886,17 @@ namespace orcplan
 
                 //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
                 //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
+                string r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                JsonValue json = JsonValue.Parse(r);
 
-                double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
                 //return latD * latD + lngD * lngD;
 
                 DateTime sortDateTime = buildt.AddSeconds(ddd);
@@ -1900,14 +1917,17 @@ namespace orcplan
 
                     //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
                     //string r_internal = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                    //JsonValue json_internal = JsonValue.Parse(r);
+                    string r_internal = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                    JsonValue json_internal = JsonValue.Parse(r);
 
-                    double distBetInternal = GetGeoPathDistance(latS, lngS, latD, lngD);
+                    //double distBetInternal = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                     //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                     //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    int ddd_internal = (int)distBetInternal / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    int lll_internal = (int)distBetInternal;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    //int ddd_internal = (int)distBetInternal / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                    //int lll_internal = (int)distBetInternal;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                    int ddd_internal = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                    int lll_internal = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     DateTime sortDateTime_internal = ((DateTime)ord[colOINFO_TE]).AddSeconds(ddd_internal);
 
@@ -1941,14 +1961,17 @@ namespace orcplan
 
                 //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
                 //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
+                string r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                JsonValue json = JsonValue.Parse(r);
 
-                double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
                 //return latD * latD + lngD * lngD;
                 return buildt.AddSeconds(ddd); // + duration of cooking...
             });
@@ -2452,14 +2475,17 @@ namespace orcplan
 
                 //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
                 //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
+                string r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                JsonValue json = JsonValue.Parse(r);
 
-                double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                 len += lll;
 
@@ -2502,14 +2528,17 @@ namespace orcplan
 
                 //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
                 //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
+                string r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                JsonValue json = JsonValue.Parse(r);
 
-                double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                 //len += lll;
             }
@@ -2903,6 +2932,102 @@ namespace orcplan
             }
         }
 
+        private static string GetGeoPathTotalOSRM(DateTime timeMark, string latS, string lngS, string latD, string lngD)
+        {
+            lock (lockObj)
+            {
+                //string latlngForKey = String.Join(",", latS, lngS, latD, lngD);
+
+                string requestString = String.Concat("http://router.project-osrm.org/route/v1/driving/", lngS, ",", latS, ";", lngD, ",", latD, "?overview=false");
+
+                var request = (HttpWebRequest)WebRequest.Create(requestString);
+                request.Method = "GET";
+
+                //request.Headers[]=;
+
+                //var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
+
+                GeoRouteData geoInfo = null;// String.Empty;
+                //do
+                {
+                    if (!GeoRouteInfo.TryGetValue(requestString, out geoInfo))
+                    {
+
+                        //var data = Encoding.ASCII.GetBytes(postData);
+
+                        //request.Method = "GET";
+                        //request.ContentType = "application/x-www-form-urlencoded";
+                        //request.ContentLength = data.Length;
+
+                        //using (var stream = request.GetRequestStream())
+                        //{
+                        //    stream.Write(data, 0, data.Length);
+                        //}
+
+                        bool isRepeat = false;
+                        WebResponse response = null;
+                        do
+                        {
+                            if (isRepeat)
+                            {
+                                Thread.Sleep(3000);
+                                isRepeat = false;
+                            }
+
+                            try
+                            {
+                                response = (HttpWebResponse)request.GetResponse();
+                            }
+                            catch (Exception e)
+                            {
+                                isRepeat = true;
+                            }
+                        }
+                        while (isRepeat);
+
+
+                        var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                        geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
+                        GeoRouteInfo.Add(requestString, geoInfo);
+                    }
+                    else
+                    {
+                        if ((timeMark - geoInfo.TimeMark) > TimeSpan.FromDays(2))//.FromMinutes(30))
+                        {
+                            bool isRepeat = false;
+                            WebResponse response = null;
+                            do
+                            {
+                                if (isRepeat)
+                                {
+                                    Thread.Sleep(3000);
+                                    isRepeat = false;
+                                }
+
+                                try
+                                {
+                                    response = (HttpWebResponse)request.GetResponse();
+                                }
+                                catch (Exception e)
+                                {
+                                    isRepeat = true;
+                                }
+                            }
+                            while (isRepeat);
+
+
+                            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                            geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
+                            GeoRouteInfo[requestString] = geoInfo;
+                        }
+                    }
+                }
+                //while ((timeMark - geoInfo.TimeMark) > TimeSpan.FromMinutes(30));
+
+                return geoInfo.GeoResponse;
+            }
+        }
+
 
         public static void TspDoTest(string[] args)
         {
@@ -3043,14 +3168,17 @@ namespace orcplan
 
                 //string r = GetGeoPathTotal2Gis(first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
                 //string r = GetGeoPathTotalYandex(DateTime.MinValue, first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
-                //JsonValue json = JsonValue.Parse(r);
+                string r = GetGeoPathTotalOSRM(DateTime.MinValue, first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
+                JsonValue json = JsonValue.Parse(r);
 
-                double distanceBetween = MainClass.GetGeoPathDistance(first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
+                //double distanceBetween = MainClass.GetGeoPathDistance(first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
 
                 //int ddd = int.Parse(json["result"][0]["duration"].ToString());
                 //int lll = int.Parse(json["result"][0]["length"].ToString());
-                int ddd = (int)distanceBetween / 14; //int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                int lll = (int)distanceBetween; //int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)distanceBetween / 14; //int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distanceBetween; //int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                 return lll;
 
@@ -3099,6 +3227,13 @@ namespace orcplan
 
             return sCoord.GetDistanceTo(eCoord);
         }
+
+        //private static double GetOSRMDistance(string osrmResult)
+        //{
+
+        //    return sCoord.GetDistanceTo(eCoord);
+        //}
+
 
         public class TspTour
         {
