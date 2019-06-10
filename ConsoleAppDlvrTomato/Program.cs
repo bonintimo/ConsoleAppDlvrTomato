@@ -47,9 +47,9 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 2;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -881,7 +881,7 @@ namespace orcplan
                 scriptPlan.AppendLine("{");
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
-                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(!btn{hashCode}.isSelected()) {{ delColl{hashCode}(); addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); myMap.setBounds(coll{hashCode}.getBounds()); }} else {{ btn{hashCode}.options.set('maxWidth', 200); }} }});");
+                scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(!btn{hashCode}.isSelected()) {{ addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); myMap.setBounds(coll{hashCode}.getBounds()); }} else {{ delColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 200); }} }});");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
@@ -923,7 +923,7 @@ namespace orcplan
                 scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{  wayPointVisible:false, viaPointVisible:false,  pinVisible:false, boundsAutoApply: false }}));");
                 scriptPlan.AppendLine($"function addColl{hashCode}() {{ myMap.geoObjects.add(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"function delColl{hashCode}() {{ myMap.geoObjects.remove(coll{hashCode}); }}");
-                scriptPlan.AppendLine($"addColl{hashCode}();");
+                //scriptPlan.AppendLine($"addColl{hashCode}();");
                 //scriptPlan.AppendLine($"{{ var animLine = new ymaps.AnimatedLine([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3, animationTime: 4000 }} );");
                 //scriptPlan.AppendLine($"myMap.geoObjects.add(animLine);");
                 //scriptPlan.AppendLine($"function playAnimation() {{ animLine.animate().then(function(){{return ymaps.vow.delay(null, 2000);}}).then(function(){{playAnimation();}}); }}");
