@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppDlvrTomato", "ConsoleAppDlvrTomato\ConsoleAppDlvrTomato.csproj", "{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppDiscoverCity", "ConsoleAppDiscoverCity\ConsoleAppDiscoverCity.csproj", "{53CD14F4-BC3E-4B31-950C-AE5CF285E433}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
