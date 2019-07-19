@@ -1,5 +1,6 @@
 ﻿using Osrm.Client;
-using Osrm.Client.Models.Responses;
+//using Osrm.Client.Models;
+//using Osrm.Client.Models.Responses;
 using Osrm.Client.v5;
 using System;
 using System.Collections.Generic;
@@ -19,27 +20,45 @@ namespace ConsoleAppDiscoverCity
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            DateTime datetimeNow = DateTime.Now;
 
-            DataTable dbTbl = new DataTable();
+            DataTable dbTbl = new DataTable("houses71dd");
 
             OleDbConnection dbConn = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\home91\Downloads\fias_dbf;Extended Properties=dBASE IV;");
 
             dbConn.Open();
 
-            string sqlSelect = "select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300057'"; 
+            string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300057'";
+            //string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and ADDROB71.POSTALCODE = '300057'";
+            //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and ADDROB71.POSTALCODE = '300057'";
+            //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > @value1 and HOUSE71.ENDDATE > @value1 and ADDROB71.POSTALCODE = '300057'";
 
             OleDbCommand dbComm = new OleDbCommand(sqlSelect, dbConn);
+            //dbComm.Parameters.AddWithValue("@value1", datetimeNow);
+            //dbComm.Parameters.AddWithValue("@value2", datetimeNow);
             OleDbDataAdapter dbAdap = new OleDbDataAdapter(dbComm);
 
             dbAdap.Fill(dbTbl);
 
-            dbTbl.Rows.Cast<DataRow>().All(r=> {
+            dbTbl.Columns.Add("ADDRFULL", typeof(String));
+            dbTbl.Columns.Add("POINTLAT", typeof(Double));
+            dbTbl.Columns.Add("POINTLNG", typeof(Double));
+
+            Console.WriteLine($"Count {dbTbl.Rows.Count} rows.");
+            dbTbl.Rows.Cast<DataRow>().All(r =>
+            {
+
+                if (((DateTime)r["ADDROB71.ENDDATE"] < datetimeNow) || ((DateTime)r["HOUSE71.ENDDATE"] < datetimeNow))
+                {
+                    r.Delete();
+                    return true;
+                }
 
                 string SFN = $"{ GetShortAndFormalNames(dbConn, r["PARENTGUID"].ToString())}, {r["SHORTNAME"]} {r["FORMALNAME"]} {r["HOUSENUM"]}";
 
                 var geocoder = new YandexGeocoder
                 {
-                    Apikey= "a1d0badd-df1d-4814-8d43-eab723c50133",
+                    Apikey = "a1d0badd-df1d-4814-8d43-eab723c50133",
                     SearchQuery = SFN,
                     Results = 1,
                     LanguageCode = LanguageCode.en_RU
@@ -47,23 +66,71 @@ namespace ConsoleAppDiscoverCity
 
                 LocationPoint pnt = geocoder.GetResults()[0].Point;
 
-                Console.WriteLine($"{SFN}, {pnt.Longitude}, {pnt.Latitude}");
+                Console.WriteLine($"{SFN} [ {pnt.Longitude}, {pnt.Latitude} ]");
+
+                r["ADDRFULL"] = SFN;
+                r["POINTLAT"] = pnt.Latitude;
+                r["POINTLNG"] = pnt.Longitude;
 
                 return true;
             });
+
+            dbTbl.AcceptChanges();
 
             dbConn.Close();
             dbConn.Dispose();
 
             var osrm = new Osrm5x("http://router.project-osrm.org/", "v1", "car");
             //var result = osrm.Nearest(new Location(52.4224, 13.333086));
-            NearestResponse result = TryNearest(osrm);
+            //NearestResponse result = TryNearest(osrm);
 
-            result.Waypoints.All(w =>
+            //result.Waypoints.All(w =>
+            //{
+            //    Console.WriteLine($"{w.Location.Longitude},{w.Location.Latitude}");
+            //    return true;
+            //});
+
+            dbTbl.Rows.Cast<DataRow>().All(rowSrc =>
             {
-                Console.WriteLine($"{w.Location.Longitude},{w.Location.Latitude}");
+                dbTbl.Rows.Cast<DataRow>().All(rowDst =>
+                {
+                    var locations = new Location[] {
+                        new Location((Double)rowSrc["POINTLAT"], (Double)rowSrc["POINTLNG"]),
+                        new Location((Double)rowDst["POINTLAT"], (Double)rowDst["POINTLNG"]),
+                    };
+
+                    var routeResult = TryRoute(osrm, locations);
+
+                    return true;
+                });
+
                 return true;
             });
+
+            dbTbl.WriteXml("house71dd.xml");
+        }
+
+        private static Osrm.Client.Models.RouteResponse TryRoute(Osrm5x osrm, Location[] locations)
+        {
+
+            //var result = osrm.Route(locations);
+            do
+            {
+                try
+                {
+                    return osrm.Route(new Osrm.Client.Models.RouteRequest()
+                    {
+                        Coordinates = locations,
+                        Steps = true,
+                        Alternative=true
+                        
+                    });
+                }
+                catch (Exception e)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(3));
+                }
+            } while (true);
         }
 
         private static object GetShortAndFormalNames(OleDbConnection dbConn, string v)
@@ -79,7 +146,7 @@ namespace ConsoleAppDiscoverCity
             return $"{GetShortAndFormalNames(dbConn, tbl.Rows[0]["PARENTGUID"].ToString())}, {tbl.Rows[0]["SHORTNAME"]} {tbl.Rows[0]["FORMALNAME"]}";
         }
 
-        private static NearestResponse TryNearest(Osrm5x osrm)
+        private static Osrm.Client.Models.Responses.NearestResponse TryNearest(Osrm5x osrm)
         {
             do
             {
