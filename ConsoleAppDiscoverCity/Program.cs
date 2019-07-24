@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -28,7 +29,7 @@ namespace ConsoleAppDiscoverCity
 
             dbConn.Open();
 
-            string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300057'";
+            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > @value1 and HOUSE71.ENDDATE > @value1 and ADDROB71.POSTALCODE = '300057'";
@@ -77,8 +78,15 @@ namespace ConsoleAppDiscoverCity
 
             dbTbl.AcceptChanges();
 
-            dbConn.Close();
-            dbConn.Dispose();
+            //string TBLNAME_DISDUR = $"DISDUR{ datetimeNow.ToString("ddMMyyyy")}";
+            string TBLNAME_DISDUR = Path.GetRandomFileName();
+            {
+                OleDbCommand cmd = dbConn.CreateCommand();
+
+                cmd.CommandText = $"CREATE TABLE {TBLNAME_DISDUR} (SRC_HOUSEGUID CHAR(36), DST_HOUSEGUID CHAR(36), DISTANCE DECIMAL, DURATION DECIMAL)";
+                cmd.ExecuteNonQuery();
+            }
+
 
             var osrm = new Osrm5x("http://router.project-osrm.org/", "v1", "car");
             //var result = osrm.Nearest(new Location(52.4224, 13.333086));
@@ -101,11 +109,23 @@ namespace ConsoleAppDiscoverCity
 
                     var routeResult = TryRoute(osrm, locations);
 
+                    Console.WriteLine($"{rowSrc["ADDRFULL"]} > {rowDst["ADDRFULL"]} DIS {routeResult.Routes[0].Distance} DUR {routeResult.Routes[0].Duration}");
+
+                    {
+                        OleDbCommand cmd = dbConn.CreateCommand();
+
+                        cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ('{rowSrc["HOUSEGUID"]}', '{rowDst["HOUSEGUID"]}', {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
+                        cmd.ExecuteNonQuery();
+                    }
+
                     return true;
                 });
 
                 return true;
             });
+
+            dbConn.Close();
+            dbConn.Dispose();
 
             dbTbl.WriteXml("house71dd.xml");
         }
