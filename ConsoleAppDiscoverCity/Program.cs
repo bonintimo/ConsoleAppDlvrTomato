@@ -29,7 +29,7 @@ namespace ConsoleAppDiscoverCity
 
             dbConn.Open();
 
-            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300057'";
+            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300005'";
             //string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > @value1 and HOUSE71.ENDDATE > @value1 and ADDROB71.POSTALCODE = '300057'";
@@ -45,7 +45,7 @@ namespace ConsoleAppDiscoverCity
             dbTbl.Columns.Add("POINTLAT", typeof(Double));
             dbTbl.Columns.Add("POINTLNG", typeof(Double));
 
-            Console.WriteLine($"Count {dbTbl.Rows.Count} rows.");
+            Console.WriteLine($"Count {dbTbl.Rows.Count} rows from DB.");
             dbTbl.Rows.Cast<DataRow>().All(r =>
             {
 
@@ -77,6 +77,7 @@ namespace ConsoleAppDiscoverCity
             });
 
             dbTbl.AcceptChanges();
+            Console.WriteLine($"Count {dbTbl.Rows.Count} rows is live.");
 
             //string TBLNAME_DISDUR = $"DISDUR{ datetimeNow.ToString("ddMMyyyy")}";
             string TBLNAME_DISDUR = Path.GetRandomFileName();
@@ -111,6 +112,7 @@ namespace ConsoleAppDiscoverCity
 
                     Console.WriteLine($"{rowSrc["ADDRFULL"]} > {rowDst["ADDRFULL"]} DIS {routeResult.Routes[0].Distance} DUR {routeResult.Routes[0].Duration}");
 
+                    if ((routeResult.Routes[0].Distance < 3000.0) && (routeResult.Routes[0].Duration < 600.0))
                     {
                         OleDbCommand cmd = dbConn.CreateCommand();
 
@@ -142,8 +144,8 @@ namespace ConsoleAppDiscoverCity
                     {
                         Coordinates = locations,
                         Steps = true,
-                        Alternative=true
-                        
+                        Alternative = true
+
                     });
                 }
                 catch (Exception e)
