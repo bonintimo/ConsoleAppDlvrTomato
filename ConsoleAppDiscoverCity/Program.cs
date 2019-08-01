@@ -29,7 +29,7 @@ namespace ConsoleAppDiscoverCity
 
             dbConn.Open();
 
-            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE = '300005'";
+            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE in ('300021','300016','300027')";
             //string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > @value1 and HOUSE71.ENDDATE > @value1 and ADDROB71.POSTALCODE = '300057'";
@@ -65,7 +65,15 @@ namespace ConsoleAppDiscoverCity
                     LanguageCode = LanguageCode.en_RU
                 };
 
-                LocationPoint pnt = geocoder.GetResults()[0].Point;
+                var getRes = geocoder.GetResults();
+
+                if (getRes.Count == 0)
+                {
+                    r.Delete();
+                    return true;
+                }
+
+                LocationPoint pnt = getRes[0].Point;
 
                 Console.WriteLine($"{SFN} [ {pnt.Longitude}, {pnt.Latitude} ]");
 
