@@ -29,7 +29,12 @@ namespace ConsoleAppDiscoverCity
 
             dbConn.Open();
 
-            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.POSTALCODE in ('300001','300004','300012','300026','300021','300016','300027','300010','300053')";
+            string whereString = "ADDROB71.POSTALCODE in ('300001','300004','300012','300026','300021','300016','300027','300010','300053')";
+            if (args.Length > 0)
+            {
+                whereString = args[0];
+            }
+            string sqlSelect = $"select HOUSE71.HOUSEGUID, ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM, ADDROB71.ENDDATE, HOUSE71.ENDDATE from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and {whereString}";
             //string sqlSelect = $"select ADDROB71.PARENTGUID, ADDROB71.AOGUID, ADDROB71.FORMALNAME, ADDROB71.SHORTNAME, HOUSE71.HOUSENUM from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("dd/MM/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and HOUSE71.ENDDATE > {datetimeNow.ToString("MM/dd/yyyy")} and ADDROB71.POSTALCODE = '300057'";
             //string sqlSelect = $"select * from ADDROB71, HOUSE71 where ADDROB71.AOGUID = HOUSE71.AOGUID and ADDROB71.ENDDATE > @value1 and HOUSE71.ENDDATE > @value1 and ADDROB71.POSTALCODE = '300057'";
@@ -92,7 +97,8 @@ namespace ConsoleAppDiscoverCity
             {
                 OleDbCommand cmd = dbConn.CreateCommand();
 
-                cmd.CommandText = $"CREATE TABLE {TBLNAME_DISDUR} (SRC_HOUSEGUID CHAR(36), DST_HOUSEGUID CHAR(36), DISTANCE DECIMAL, DURATION DECIMAL)";
+                //cmd.CommandText = $"CREATE TABLE {TBLNAME_DISDUR} (SRC_HOUSEGUID CHAR(36), DST_HOUSEGUID CHAR(36), DISTANCE DECIMAL, DURATION DECIMAL)";
+                cmd.CommandText = $"CREATE TABLE {TBLNAME_DISDUR} (WHENQUERY DATETIME, SRC_LAT DECIMAL, SRC_LNG DECIMAL, DST_LAT DECIMAL, DST_LNG DECIMAL, DISTANCE DECIMAL, DURATION DECIMAL)";
                 cmd.ExecuteNonQuery();
             }
 
@@ -124,7 +130,8 @@ namespace ConsoleAppDiscoverCity
                     {
                         OleDbCommand cmd = dbConn.CreateCommand();
 
-                        cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ('{rowSrc["HOUSEGUID"]}', '{rowDst["HOUSEGUID"]}', {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
+                        //cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ('{rowSrc["HOUSEGUID"]}', '{rowDst["HOUSEGUID"]}', {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
+                        cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES (01/01/2019, {(Double)rowSrc["POINTLAT"]}, {(Double)rowSrc["POINTLNG"]}, {(Double)rowDst["POINTLAT"]}, {(Double)rowDst["POINTLNG"]}, {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
                         cmd.ExecuteNonQuery();
                     }
 
