@@ -57,6 +57,7 @@ namespace ConsoleAppDiscoverCity
                 if (((DateTime)r["ADDROB71.ENDDATE"] < datetimeNow) || ((DateTime)r["HOUSE71.ENDDATE"] < datetimeNow))
                 {
                     r.Delete();
+                    Console.WriteLine($"{dbTbl.Rows.IndexOf(r)}/{dbTbl.Rows.Count} DELETE UNUSED");
                     return true;
                 }
 
@@ -75,12 +76,13 @@ namespace ConsoleAppDiscoverCity
                 if (getRes.Count == 0)
                 {
                     r.Delete();
+                    Console.WriteLine($"{dbTbl.Rows.IndexOf(r)}/{dbTbl.Rows.Count} DELETE NO GEOCODE");
                     return true;
                 }
 
                 LocationPoint pnt = getRes[0].Point;
 
-                Console.WriteLine($"{SFN} [ {pnt.Longitude}, {pnt.Latitude} ]");
+                Console.WriteLine($"{dbTbl.Rows.IndexOf(r)}/{dbTbl.Rows.Count} {SFN} [ {pnt.Longitude}, {pnt.Latitude} ]");
 
                 r["ADDRFULL"] = SFN;
                 r["POINTLAT"] = pnt.Latitude;
@@ -124,14 +126,14 @@ namespace ConsoleAppDiscoverCity
 
                     var routeResult = TryRoute(osrm, locations);
 
-                    Console.WriteLine($"{rowSrc["ADDRFULL"]} > {rowDst["ADDRFULL"]} DIS {routeResult.Routes[0].Distance} DUR {routeResult.Routes[0].Duration}");
+                    Console.WriteLine($"{dbTbl.Rows.IndexOf(rowSrc)}/{dbTbl.Rows.IndexOf(rowDst)} {rowSrc["ADDRFULL"]} > {rowDst["ADDRFULL"]} DIS {routeResult.Routes[0].Distance} DUR {routeResult.Routes[0].Duration}");
 
                     if ((routeResult.Routes[0].Distance < 3000.0) && (routeResult.Routes[0].Duration < 600.0))
                     {
                         OleDbCommand cmd = dbConn.CreateCommand();
 
                         //cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ('{rowSrc["HOUSEGUID"]}', '{rowDst["HOUSEGUID"]}', {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
-                        cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES (01/01/2019, {(Double)rowSrc["POINTLAT"]}, {(Double)rowSrc["POINTLNG"]}, {(Double)rowDst["POINTLAT"]}, {(Double)rowDst["POINTLNG"]}, {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
+                        cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ({DateTime.Now.ToShortDateString()}, {(Double)rowSrc["POINTLAT"]}, {(Double)rowSrc["POINTLNG"]}, {(Double)rowDst["POINTLAT"]}, {(Double)rowDst["POINTLNG"]}, {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
                         cmd.ExecuteNonQuery();
                     }
 
