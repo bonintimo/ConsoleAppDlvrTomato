@@ -20,6 +20,21 @@ namespace ConsoleAppMergingDisDur
 
             dbConn.Open();
 
+            foreach(string argv in args)
+            {
+                OleDbCommand dbCmd = new OleDbCommand($"select * from {argv}", dbConn);
+
+                OleDbDataReader dbRdr = dbCmd.ExecuteReader();
+
+                while (dbRdr.Read())
+                {
+                    //Console.WriteLine(dbRdr[0].ToString());
+
+                }
+                dbRdr.Close();
+            }
+
+            dbConn.Close();
         }
     }
 }
