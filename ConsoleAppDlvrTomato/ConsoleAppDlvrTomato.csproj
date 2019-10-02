@@ -43,8 +43,8 @@
     <Reference Include="System.Activities" />
     <Reference Include="System.Core" />
     <Reference Include="System.Device" />
-    <Reference Include="System.Json, Version=2.0.6.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Json.4.5.0\lib\netstandard2.0\System.Json.dll</HintPath>
+    <Reference Include="System.Json, Version=2.0.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Json.4.6.0\lib\netstandard2.0\System.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
