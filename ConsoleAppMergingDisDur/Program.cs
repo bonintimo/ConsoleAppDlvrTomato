@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Json;
+using System.Net;
 
 namespace ConsoleAppMergingDisDur
 {
@@ -59,14 +61,22 @@ namespace ConsoleAppMergingDisDur
             }
 
             dbConn.Close();
+
+            Console.Write("press any key...");
+            Console.ReadLine();
         }
 
         private static List<Location> Locs = new List<Location>();
+        private static Dictionary<Location,string> LocsAddr = new Dictionary<Location,string>();
 
         private static void AddNewLocation(Osrm5x osrm, Location location)
         {
             //Locs.Find(l => { return l == location; });
-            if (!Locs.Exists(l => { return l == location; }))
+            if (Locs.Exists(l => { return l == location; }))
+            {
+                Console.WriteLine($"{ location.Latitude},{ location.Longitude} exists...");
+            }
+            else
             {
                 foreach (Location loc in Locs)
                 {
@@ -77,6 +87,8 @@ namespace ConsoleAppMergingDisDur
                 }
 
                 Locs.Add(location);
+                LocsAddr.Add(location, GetYandexHouseAddress(location));
+                Console.WriteLine($"{location.Latitude},{location.Longitude} {LocsAddr[location]}");
             }
         }
 
@@ -95,6 +107,10 @@ namespace ConsoleAppMergingDisDur
                 //cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ('{rowSrc["HOUSEGUID"]}', '{rowDst["HOUSEGUID"]}', {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
                 cmd.CommandText = $"INSERT INTO {TBLNAME_DISDUR} VALUES ({DateTime.Now.ToShortDateString()}, {location.Latitude}, {location.Longitude}, {loc.Latitude}, {loc.Longitude}, {routeResult.Routes[0].Distance}, {routeResult.Routes[0].Duration})";
                 cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                Console.WriteLine("not inserted...");
             }
         }
 
@@ -129,6 +145,52 @@ namespace ConsoleAppMergingDisDur
                     Thread.Sleep(TimeSpan.FromSeconds(3));
                 }
             } while (true);
+        }
+
+        private static string GetYandexHouseAddress(Location loc)
+        {
+            string requestString = String.Concat("https://geocode-maps.yandex.ru/1.x/?apikey=a1d0badd-df1d-4814-8d43-eab723c50133&format=json&geocode=", $"{loc.Longitude},{loc.Latitude}");
+
+            var request = (HttpWebRequest)WebRequest.Create(requestString);
+
+            request.Method = "GET";
+
+            try
+            {
+                var response = (HttpWebResponse)request.GetResponse();
+
+            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+
+            JsonValue json = JsonValue.Parse(responseString.ToString());
+
+            JsonArray jsonArr = (JsonArray)json["response"]["GeoObjectCollection"]["featureMember"];
+            JsonValue jsonVal = null;
+
+            if (jsonArr.Count == 1)
+            {
+                jsonVal = jsonArr[0];
+            }
+            else
+            {
+                foreach (JsonValue v in jsonArr)
+                {
+                    if (v.ToString().Contains("house"))
+                    {
+                        jsonVal = v;
+                        break;
+                    }
+                }
+            }
+
+            if (jsonVal is null) return String.Empty;
+
+            return jsonVal["GeoObject"]["metaDataProperty"]["GeocoderMetaData"]["text"].ToString();
+
+            }
+            catch (Exception E)
+            {
+                return String.Empty;
+            }
         }
     }
 }
