@@ -89,7 +89,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C9.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -268,6 +268,7 @@ namespace orcplan
                 var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 geoInfo = new GeoRouteData() { TimeMark = DateTime.MinValue, GeoResponse = responseString.ToString() };
                 GeoRouteInfo.Add(requestString, geoInfo);
+                response.Close();
             }
 
             JsonValue json = JsonValue.Parse(geoInfo.GeoResponse);
@@ -2789,6 +2790,7 @@ namespace orcplan
 
             var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
             geoInfo = responseString.ToString();
+            response.Close();
             return geoInfo;
         }
 
@@ -2829,6 +2831,7 @@ namespace orcplan
                     var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                     geoInfo = new GeoRouteData() { TimeMark = DateTime.MinValue, GeoResponse = responseString.ToString() };
                     GeoRouteInfo.Add(postData, geoInfo);
+                    response.Close();
                 }
                 return geoInfo.GeoResponse;
             }
@@ -2893,6 +2896,7 @@ namespace orcplan
                         var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                         geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
                         GeoRouteInfo.Add(requestString, geoInfo);
+                        response.Close();
                     }
                     else
                     {
@@ -2923,6 +2927,7 @@ namespace orcplan
                             var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                             geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
                             GeoRouteInfo[requestString] = geoInfo;
+                            response.Close();
                         }
                     }
                 }
@@ -2981,6 +2986,8 @@ namespace orcplan
                             catch (Exception e)
                             {
                                 isRepeat = true;
+                                request = (HttpWebRequest)WebRequest.Create(requestString);
+                                request.Method = "GET";
                             }
                         }
                         while (isRepeat);
@@ -2989,6 +2996,7 @@ namespace orcplan
                         var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                         geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
                         GeoRouteInfo.Add(requestString, geoInfo);
+                        response.Close();
                     }
                     else
                     {
@@ -3011,6 +3019,8 @@ namespace orcplan
                                 catch (Exception e)
                                 {
                                     isRepeat = true;
+                                    request = (HttpWebRequest)WebRequest.Create(requestString);
+                                    request.Method = "GET";
                                 }
                             }
                             while (isRepeat);
@@ -3019,6 +3029,7 @@ namespace orcplan
                             var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                             geoInfo = new GeoRouteData() { TimeMark = timeMark, GeoResponse = responseString.ToString() };
                             GeoRouteInfo[requestString] = geoInfo;
+                            response.Close();
                         }
                     }
                 }
