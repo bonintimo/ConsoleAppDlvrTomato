@@ -46,10 +46,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 1;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -66,7 +66,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./OINFO-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -89,7 +89,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C3.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -147,8 +147,8 @@ namespace orcplan
         {
             BaseDirectoryForDPR = DateTime.Now.ToString("yyyy-MM-dd(HH-mm)");
             Directory.CreateDirectory(BaseDirectoryForDPR);
-            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "executionLOG.tsv"), "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
-            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "ordersARCHIVE.tsv"), "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "OA-O-RC.tsv"), "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
         }
 
         private static bool IsNeedPlanning(OINFO_STATE stateNext)
@@ -352,7 +352,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 16);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 32);
 
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
                 Thread.Sleep(w);
@@ -532,7 +532,7 @@ namespace orcplan
 
                 case OINFO_STATE.ENDED:
 
-                    File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "ordersARCHIVE.tsv"), $"{firstEvent[colOINFO_TB]}\t{firstEvent[colOINFO_TOT]}\t{firstEvent[colOINFO_TP]}\t{firstEvent[colOINFO_TD]}\t{firstEvent[colOINFO_OID]}\t{firstEvent[colOINFO_ADDRESS]}\t{firstEvent[colOINFO_LAT]}\t{firstEvent[colOINFO_LNG]}\t{firstEvent[colOINFO_RID]}\t{firstEvent[colOINFO_TC]}\t{firstEvent[colOINFO_TR]}\t{firstEvent[colOINFO_CID]}\t{firstEvent[colOINFO_TT]}\t{firstEvent[colOINFO_TE]}\n");
+                    File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "OA-O-RC.tsv"), $"{firstEvent[colOINFO_TB]}\t{firstEvent[colOINFO_TOT]}\t{firstEvent[colOINFO_TP]}\t{firstEvent[colOINFO_TD]}\t{firstEvent[colOINFO_OID]}\t{firstEvent[colOINFO_ADDRESS]}\t{firstEvent[colOINFO_LAT]}\t{firstEvent[colOINFO_LNG]}\t{firstEvent[colOINFO_RID]}\t{firstEvent[colOINFO_TC]}\t{firstEvent[colOINFO_TR]}\t{firstEvent[colOINFO_CID]}\t{firstEvent[colOINFO_TT]}\t{firstEvent[colOINFO_TE]}\n");
 
                     nextPlan.Tables[tblOINFO].Rows.Remove(firstEvent);
                     break;
@@ -761,9 +761,14 @@ namespace orcplan
             appLog.WriteLine($"WatchGetRouteInfos: {WatchGetRouteInfos.ElapsedMilliseconds}");
             appLog.Close();
 
-            TheBestDeliveryPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"00000000-TBDP.xml"));
+            string fnBUILDT = ((DateTime)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
+            string fnBUILDO = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
+            string fnTOTALENGTH = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
+            string filenameTBDP = $"TBDP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
 
-            WriteHtmlVersionTheBestDeliveryPlan(TheBestDeliveryPlan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"00000000-TBDP.html"));
+            TheBestDeliveryPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
+
+            WriteHtmlVersionTheBestDeliveryPlan(TheBestDeliveryPlan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.html"));
 
             int cntTB = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING).Count();
             int cntTC = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.COOKING).Count();
@@ -772,7 +777,7 @@ namespace orcplan
             int cntTP = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.PLACING).Count();
             int cntTE = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.ENDED).Count();
 
-            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "executionLOG.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
+            File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
             return TheBestDeliveryPlan;
         }
