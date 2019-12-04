@@ -58,6 +58,7 @@ namespace orcplan
         private static DateTime PriorTimeSimulation = DateTime.MinValue;
 
         private static string BaseDirectoryForDPR = String.Empty;
+        private static string BaseDirectoryForCDP = String.Empty;
 
         public static void Main(string[] args)
         {
@@ -66,7 +67,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -89,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C3.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -352,7 +353,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 32);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 2);
 
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
                 Thread.Sleep(w);
@@ -667,6 +668,7 @@ namespace orcplan
             }
 
             Directory.CreateDirectory(dir);
+            BaseDirectoryForCDP = dir;
 
             appLog = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, $"DPL.log"));
 
@@ -2088,6 +2090,12 @@ namespace orcplan
             //deliveryPlan.WriteXml(xmlFileName);
             //WriteHtmlVersionTheBestDeliveryPlan(deliveryPlan, htmlFileName);
 
+            string fnBUILDT = ((DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
+            string fnBUILDO = deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
+            string fnTOTALENGTH = deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
+            string filenameTBDP = $"CODP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
+
+            deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
             if (TheBestDeliveryPlan == null)
             {
