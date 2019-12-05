@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -766,7 +766,8 @@ namespace orcplan
             string fnBUILDT = ((DateTime)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
             string fnBUILDO = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
             string fnTOTALENGTH = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
-            string filenameTBDP = $"TBDP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
+            string fnTOTALDUR = ((TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).ToString(@"hh\-mm");
+            string filenameTBDP = $"TBDP({fnBUILDT}({fnBUILDO}({fnTOTALENGTH}({fnTOTALDUR}";
 
             TheBestDeliveryPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
 
