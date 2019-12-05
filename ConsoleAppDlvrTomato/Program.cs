@@ -67,7 +67,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -2105,8 +2105,9 @@ namespace orcplan
             else
             {
                 //
-                if ((totalRouteLength > 0) && CompareTotalength(TheBestDeliveryPlan, totalRouteLength))// || 
+                //if ((totalRouteLength > 0) && CompareTotalength(TheBestDeliveryPlan, totalRouteLength))// || 
                 //if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
+                if (CompareTotalDuration(TheBestDeliveryPlan, deliveryPlan))
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
                     Console.WriteLine($"new TBDP");
@@ -2114,6 +2115,14 @@ namespace orcplan
             }
 
             WatchWriteCurrentDeliveryPlan.Stop();
+        }
+
+        private static bool CompareTotalDuration(DataSet theBestDeliveryPlan, DataSet deliveryPlan)
+        {
+            TimeSpan theBestDur = (TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"];
+            TimeSpan thePlanDur = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"];
+
+            return thePlanDur < theBestDur;
         }
 
         private static bool CompareTotalength(DataSet theBestDeliveryPlan, long totalRouteLength)
@@ -2153,6 +2162,8 @@ namespace orcplan
 
             if (rowsCount != 0)
             {
+                deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"] = med;
+
                 med = TimeSpan.FromTicks(med.Ticks / rowsCount);
 
                 deliveryPlan.Tables[tblOINFO].Select().All<DataRow>(dr =>
@@ -2172,6 +2183,7 @@ namespace orcplan
             {
                 deliveryPlan.Tables["SUMMARY"].Rows[0]["MED"] = TimeSpan.FromTicks(0);
                 deliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"] = TimeSpan.FromTicks(0);
+                deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"] = TimeSpan.FromTicks(0);
             }
 
             deliveryPlan.AcceptChanges();
@@ -2611,6 +2623,7 @@ namespace orcplan
             summary.Columns.Add("MED", typeof(TimeSpan));
             summary.Columns.Add("DIV", typeof(TimeSpan));
             summary.Columns.Add("TOTALENGTH", typeof(int));
+            summary.Columns.Add("TOTALDURATION", typeof(TimeSpan));
 
             summary.AcceptChanges();
 
