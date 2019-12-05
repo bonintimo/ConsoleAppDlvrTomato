@@ -47,9 +47,9 @@ namespace orcplan
     {
         
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 5;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -353,7 +353,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 2);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 32);
 
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
                 Thread.Sleep(w);
@@ -2095,7 +2095,7 @@ namespace orcplan
             string fnTOTALENGTH = deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
             string filenameTBDP = $"CODP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
 
-            deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
+            //deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
             if (TheBestDeliveryPlan == null)
             {
@@ -2105,8 +2105,8 @@ namespace orcplan
             else
             {
                 //
-                //if ((totalRouteLength > 0) && CompareTotalength(TheBestDeliveryPlan, totalRouteLength))// || 
-                if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
+                if ((totalRouteLength > 0) && CompareTotalength(TheBestDeliveryPlan, totalRouteLength))// || 
+                //if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
                     Console.WriteLine($"new TBDP");
