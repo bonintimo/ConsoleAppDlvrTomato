@@ -67,7 +67,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C9.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -876,7 +876,7 @@ namespace orcplan
             {
                 int hashCode = rInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"color: red; background-color: lightred; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size= 13px; color: red; background-color: lightred; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{rInfo[colRINFO_RID]}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
@@ -894,7 +894,7 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"color: blue; background-color: lightblue; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size= 13px; color: blue; background-color: lightblue; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
@@ -969,7 +969,7 @@ namespace orcplan
         {
             int hashCode = oInfo.GetHashCode();
             scriptPlan.AppendLine("{");
-            scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"color: green; background-color: lightgreen; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
+            scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size= 13px; color: green; background-color: lightgreen; border: 2px solid;\"><span>{{{{data.content}}}}</span></div>');");
 
             TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
             string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
