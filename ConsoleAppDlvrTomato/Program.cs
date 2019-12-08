@@ -2846,8 +2846,16 @@ namespace orcplan
                 set {
                     privGeoResponse = value;
                     JsonValue json = JsonValue.Parse(value);
-                    Duration = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                    Distance = (int)double.Parse(json["routes"][0]["distance"].ToString());
+                    try
+                    {
+                        Duration = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                        Distance = (int)double.Parse(json["routes"][0]["distance"].ToString());
+                    }
+                    catch
+                    {
+                        Duration = 0;
+                        Distance = 0;
+                    }
                 }
             }
             public int Duration { get; private set; }
