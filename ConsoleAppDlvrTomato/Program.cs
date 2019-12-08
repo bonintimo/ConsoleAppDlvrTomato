@@ -67,7 +67,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -146,7 +146,7 @@ namespace orcplan
 
         private static void InitBaseDirForDPR()
         {
-            BaseDirectoryForDPR = DateTime.Now.ToString("yyyy-MM-dd(HH-mm)");
+            BaseDirectoryForDPR = $"{DateTime.Now.ToString("yyyy-MM-dd(HH-mm)")}R{MAX_RESTAURANTS_FOR_PLANNING}C{MAX_COURIERS_FOR_PLANNING}O{MAX_ORDERS_FOR_COURIERS}]";
             Directory.CreateDirectory(BaseDirectoryForDPR);
             File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), "buildt\tcntTB\tcntTC\tcntTR\tcntTT\tcntTP\tcntTE\tdir\tspanTime\tbeginDateTime\tfinishDateTime\tGeoRouteInfoCount\n");
             File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "OA-O-RC.tsv"), "colOINFO_TB\tcolOINFO_TOT\tcolOINFO_TP\tcolOINFO_TD\tcolOINFO_OID\tcolOINFO_ADDRESS\tcolOINFO_LAT\tcolOINFO_LNG\tcolOINFO_RID\tcolOINFO_TC\tcolOINFO_TR\tcolOINFO_CID\tcolOINFO_TT\tcolOINFO_TE\n");
@@ -660,7 +660,11 @@ namespace orcplan
             //throw new NotImplementedException();
             DateTime beginDateTime = DateTime.Now;
 
-            string dir = Path.Combine(BaseDirectoryForDPR, buildt.ToString("yyyy-MM-dd(HH-mm)"));
+            int rCount = deliveryPlan.Tables[tblRINFO].Rows.Count;
+            int cCount = deliveryPlan.Tables[tblCINFO].Rows.Count;
+            int oCount = deliveryPlan.Tables[tblOINFO].Rows.Count;
+
+            string dir = $"{Path.Combine(BaseDirectoryForDPR, buildt.ToString("yyyy-MM-dd(HH-mm)"))}R{rCount}C{cCount}O{oCount}";
 
             dir = ExtendDirByCount(dir);
 
@@ -768,7 +772,8 @@ namespace orcplan
             string fnBUILDT = ((DateTime)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
             string fnBUILDO = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
             string fnTOTALENGTH = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
-            string filenameTBDP = $"TBDP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
+            string fnTOTALDUR = ((TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).ToString(@"hh\-mm");
+            string filenameTBDP = $"TBDP({fnBUILDT}({fnBUILDO}({fnTOTALENGTH}({fnTOTALDUR}";
 
             TheBestDeliveryPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
 
@@ -873,8 +878,10 @@ namespace orcplan
             {
                 int hashCode = rInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: red; background-color: lightred; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{rInfo[colRINFO_RID]}\");");
+                scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {btnPosition}, bottom: 'auto' }} }});");
                 btnPosition += 35;
                 scriptPlan.AppendLine("}");
@@ -889,8 +896,10 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: blue; background-color: lightblue; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
+                scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
                 scriptPlan.AppendLine($"btn{hashCode}.events.add(['click'], function (sender) {{ if(!btn{hashCode}.isSelected()) {{ addColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 2000); myMap.setBounds(coll{hashCode}.getBounds()); }} else {{ delColl{hashCode}(); btn{hashCode}.options.set('maxWidth', 200); }} }});");
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
@@ -962,6 +971,7 @@ namespace orcplan
         {
             int hashCode = oInfo.GetHashCode();
             scriptPlan.AppendLine("{");
+            scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: green; background-color: lightgreen; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
 
             TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
             string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
@@ -982,6 +992,7 @@ namespace orcplan
                 + ((DateTime)oInfo[colOINFO_TP]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? "(HH:mm)" : " HH:mm "))
                 + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? "(HH:mm)" : " HH:mm"));
             scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {ordrTimes}\");");
+            scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
             //scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
             scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 15, right: 'auto', top: {btnPos}, bottom: 'auto' }} }});");
             btnPos += 35;
