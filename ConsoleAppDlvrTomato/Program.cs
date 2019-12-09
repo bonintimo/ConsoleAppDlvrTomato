@@ -90,7 +90,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -1625,11 +1625,13 @@ namespace orcplan
         {
             TspTour tour = TspDoTsp(listPnts, false, true);
 
-            TspStop[] stops = tour.Cycle().ToArray();
-
-            for (int i = 1; i < stops.Length; i++)
+            //TspStop[] stops = tour.Cycle().ToArray();
+            //int cnt = tour.Cycle().Count();
+            //for (int i = 1; i < stops.Length; i++)
+            foreach(TspStop stop in tour.Cycle().Skip(1))
             {
-                routeTunning.AddLast(stops[i].City.CityID);
+                //routeTunning.AddLast(stops[i].City.CityID);
+                routeTunning.AddLast(stop.City.CityID);
             }
         }
 
@@ -1961,14 +1963,14 @@ namespace orcplan
                 return sortDateTime; // + duration for available...
             });
 
-            DataRow[] rrr = sortRows.ToArray<DataRow>();
+            //DataRow[] rrr = sortRows.ToArray<DataRow>();
 
-            string debugCinfoOrder = String.Join("-", rrr.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
+            string debugCinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
 
-            Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {rrr.Length} {debugCinfoOrder}");
+            Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
-            return rrr;//.Reverse();
+            return sortRows;//.Reverse();
         }
 
         private static IEnumerable<DataRow> ResortRowsRinfo(DataSet deliveryPlan, DataRow dataRow, DataRowCollection rows)
@@ -2000,14 +2002,14 @@ namespace orcplan
                 return buildt.AddSeconds(r.Duration); // + duration of cooking...
             });
 
-            DataRow[] rrr = sortRows.ToArray<DataRow>();
+            //DataRow[] rrr = sortRows.ToArray<DataRow>();
 
-            string debugRinfoOrder = String.Join("-", rrr.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
+            string debugRinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
 
-            Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {rrr.Length} {debugRinfoOrder}");
+            Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
-            return rrr;//.Reverse();
+            return sortRows;//.Reverse();
         }
 
         // 
@@ -2025,11 +2027,11 @@ namespace orcplan
                  return latD * latD + lngD * lngD;
              });
 
-            DataRow[] rrr = sortRows.ToArray<DataRow>();
-            Console.WriteLine($"{dataRow.Table.TableName}: {rrr.Length}");
+            //DataRow[] rrr = sortRows.ToArray<DataRow>();
+            Console.WriteLine($"{dataRow.Table.TableName}: {sortRows.Count()/*.Length*/}");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
-            return rrr;
+            return sortRows;
         }
 
         private static void PlanningForCinfo(string dir, int vCinfo, DataSet deliveryPlan, DataRow[] bgnnOrders, long totalRouteLength)
