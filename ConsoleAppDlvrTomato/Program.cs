@@ -808,7 +808,7 @@ namespace orcplan
 
             plan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
 
-            WriteHtmlVersionTheBestDeliveryPlan(plan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.html"));
+            WriteHtmlVersionTheBestDeliveryPlan(plan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.html"), filenameTBDP);
         }
 
         private static void TryBeginningOrders(DataSet deliveryPlan, string dir, DataRow[] beginningOrders)
@@ -855,12 +855,13 @@ namespace orcplan
             return $"{dir}({cnt.ToString("D3")})";
         }
 
-        private static void WriteHtmlVersionTheBestDeliveryPlan(DataSet theBestDeliveryPlan, string v)
+        private static void WriteHtmlVersionTheBestDeliveryPlan(DataSet theBestDeliveryPlan, string v, string pageTitle)
         {
             StringBuilder scriptPlan = new StringBuilder();
 
             scriptPlan.AppendLine("<!DOCTYPE html>");
-            scriptPlan.AppendLine($"<html><head><title>TBDP {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()}</title>");
+            //scriptPlan.AppendLine($"<html><head><title>TBDP {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()}</title>");
+            scriptPlan.AppendLine($"<html><head><title>{pageTitle}</title>");
             scriptPlan.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>");
             scriptPlan.AppendLine("<script src=\"https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=a1d0badd-df1d-4814-8d43-eab723c50133\" type=\"text/javascript\"></script>");
             //scriptPlan.AppendLine("<script src=\"animated_line.js\" type =\"text/javascript\"></script>");
