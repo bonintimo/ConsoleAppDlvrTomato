@@ -46,10 +46,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 20;
+        public static int MAX_COURIERS_FOR_PLANNING = 30;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 5;
+        public static int MAX_ORDERS_FOR_COURIERS = 50;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -62,12 +62,17 @@ namespace orcplan
 
         public static void Main(string[] args)
         {
+            Console.WriteLine($"Delivery Planning System");
+            Console.WriteLine($"{Environment.CurrentDirectory}");
+            Console.WriteLine($"PC:{Environment.ProcessorCount} CLR:{Environment.Version} WS:{Environment.WorkingSet}");
+            Console.WriteLine();
+
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
             //TspDoTest(args);
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -79,7 +84,8 @@ namespace orcplan
             {
 
                 //Console.WriteLine("Write the file name with a delivery plan:");
-                Console.Write("Type a command:");
+                Console.WriteLine();
+                Console.Write($"{BaseDirectoryForDPR} Type a command:");
                 string filePlan = Console.ReadLine();
 
                 switch (filePlan.ToUpper())
@@ -90,7 +96,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
