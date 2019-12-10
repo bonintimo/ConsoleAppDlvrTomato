@@ -632,6 +632,8 @@ namespace orcplan
         private static long TspRouteLength = 0;
 
         private static DataSet TheBestDeliveryPlan = null;
+        private static DataSet TheFastDeliveryPlan = null;
+        private static DataSet TheShortDeliveryPlan = null;
 
         private static Stopwatch WatchPlanningForCartesian = new Stopwatch();
         private static Stopwatch WatchPlanningForCartesianOrderStateBeginning = new Stopwatch();
@@ -648,6 +650,8 @@ namespace orcplan
         private static DataSet PlanningForOrders(DataSet deliveryPlan)
         {
             TheBestDeliveryPlan = null;// deliveryPlan;
+            TheFastDeliveryPlan = null;
+            TheShortDeliveryPlan = null;
 
             BuildNameIndex(deliveryPlan);
 
@@ -730,7 +734,7 @@ namespace orcplan
             //beginningOrders.C
 
             // 20190503 TryBeginningOrders(deliveryPlan, dir, beginningOrders);
-            
+
             // 20190504 DataSet dlvrPlan = deliveryPlan.Copy();
 
             DataRow[] bgnnOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
@@ -744,6 +748,9 @@ namespace orcplan
             {
                 bgnnOrders = bgnnOrdersReadyToStart;
                 TheBestDeliveryPlan = null;// deliveryPlan;
+                TheFastDeliveryPlan = null;
+                TheShortDeliveryPlan = null;
+
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
@@ -775,15 +782,9 @@ namespace orcplan
             appLog.WriteLine($"WatchGetRouteInfos: {WatchGetRouteInfos.ElapsedMilliseconds}");
             appLog.Close();
 
-            string fnBUILDT = ((DateTime)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
-            string fnBUILDO = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
-            string fnTOTALENGTH = TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
-            string fnTOTALDUR = ((TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).ToString(@"hh\-mm");
-            string filenameTBDP = $"TBDP({fnBUILDT}({fnBUILDO}({fnTOTALENGTH}({fnTOTALDUR}";
-
-            TheBestDeliveryPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
-
-            WriteHtmlVersionTheBestDeliveryPlan(TheBestDeliveryPlan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.html"));
+            WriteDeliveryPlan("TBDP", dir, TheBestDeliveryPlan);
+            WriteDeliveryPlan("TFDP", dir, TheFastDeliveryPlan);
+            WriteDeliveryPlan("TSDP", dir, TheShortDeliveryPlan);
 
             int cntTB = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING).Count();
             int cntTC = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.COOKING).Count();
@@ -795,6 +796,19 @@ namespace orcplan
             File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
             return TheBestDeliveryPlan;
+        }
+
+        private static void WriteDeliveryPlan(string kind, string dir, DataSet plan)
+        {
+            string fnBUILDT = ((DateTime)plan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
+            string fnBUILDO = plan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
+            string fnTOTALENGTH = plan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
+            string fnTOTALDUR = ((TimeSpan)plan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).ToString(@"hh\-mm");
+            string filenameTBDP = $"{kind}({fnBUILDT}({fnBUILDO}({fnTOTALENGTH}({fnTOTALDUR}";
+
+            plan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.xml"));
+
+            WriteHtmlVersionTheBestDeliveryPlan(plan, Path.Combine(Directory.GetCurrentDirectory(), dir, $"{filenameTBDP}.html"));
         }
 
         private static void TryBeginningOrders(DataSet deliveryPlan, string dir, DataRow[] beginningOrders)
@@ -2128,13 +2142,38 @@ namespace orcplan
             }
             else
             {
-                //
-                //if ((totalRouteLength > 0) && CompareTotalength(TheBestDeliveryPlan, totalRouteLength))// || 
-                //if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
-                if (CompareTotalDuration(TheBestDeliveryPlan, deliveryPlan))
+                if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
                     Console.WriteLine($"new TBDP");
+                }
+            }
+
+            if (TheFastDeliveryPlan == null)
+            {
+                TheFastDeliveryPlan = deliveryPlan.Copy();
+                Console.WriteLine($"new TFDP");
+            }
+            else
+            {
+                if (CompareTotalDuration(TheFastDeliveryPlan, deliveryPlan))
+                {
+                    TheFastDeliveryPlan = deliveryPlan.Copy();
+                    Console.WriteLine($"new TFDP");
+                }
+            }
+
+            if (TheShortDeliveryPlan == null)
+            {
+                TheShortDeliveryPlan = deliveryPlan.Copy();
+                Console.WriteLine($"new TSDP");
+            }
+            else
+            {
+                if ((totalRouteLength > 0) && CompareTotalength(TheShortDeliveryPlan, totalRouteLength))// || 
+                {
+                    TheShortDeliveryPlan = deliveryPlan.Copy();
+                    Console.WriteLine($"new TSDP");
                 }
             }
 
