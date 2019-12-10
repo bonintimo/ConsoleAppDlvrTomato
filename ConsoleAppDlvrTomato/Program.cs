@@ -46,10 +46,10 @@ namespace orcplan
     static class MainClass
     {
         
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 20;
-        public static int MAX_COURIERS_FOR_PLANNING = 30;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 50;
+        public static int MAX_ORDERS_FOR_COURIERS = 5;
 
         private static List<Task> taskList = new List<Task>();
 
