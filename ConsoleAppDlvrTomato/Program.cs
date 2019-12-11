@@ -14,6 +14,7 @@ using System.Threading;
 using System.Globalization;
 using System.Device.Location;
 using System.Activities.Statements;
+using SimpleHttp;
 
 namespace orcplan
 {
@@ -45,7 +46,7 @@ namespace orcplan
 
     static class MainClass
     {
-        
+
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
@@ -72,10 +73,27 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
+
+            SimpleHttp.Route.Add(
+                "/",
+                (rqweb, rpweb, argsweb) =>
+                {
+                    //rpweb.AsText("<html><body>Welcome to Delivery Planning System</body></html>");
+                    if (TheBestDeliveryPlan != null)
+                    {
+                        StringBuilder sb = HtmlPlanBuilder(TheBestDeliveryPlan, "Delivery Planning System");
+                        //rpweb.AsText(sb.ToString(), "");
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
+                    }
+                }
+                );
+            SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
+                new Action<Task>((t) => { Console.WriteLine("HTTP server has been stoped"); })
+                );
 
             bool isContinue = true;
             DataSet deliveryPlan = null, nextPlan = null;
@@ -96,7 +114,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -160,14 +178,14 @@ namespace orcplan
 
         private static bool IsNeedPlanning(OINFO_STATE stateNext)
         {
-            switch(stateNext)
+            switch (stateNext)
             {
                 case OINFO_STATE.BEGINNING:
                 //case OINFO_STATE.COOKING:
                 case OINFO_STATE.READY:
                 case OINFO_STATE.TRANSPORTING:
                 case OINFO_STATE.PLACING:
-                //case OINFO_STATE.ENDED:
+                    //case OINFO_STATE.ENDED:
                     return true;
                     break;
             }
@@ -194,10 +212,10 @@ namespace orcplan
             dt.Columns.Add("DURATION", typeof(TimeSpan));
             dt.Columns.Add("TOT", typeof(DateTime));
 
-            if(!String.IsNullOrEmpty(strFilePath))
-            using (StreamReader sr = new StreamReader(strFilePath))
-            {
-                string[] headers = sr.ReadLine().Split('\t');
+            if (!String.IsNullOrEmpty(strFilePath))
+                using (StreamReader sr = new StreamReader(strFilePath))
+                {
+                    string[] headers = sr.ReadLine().Split('\t');
                     //foreach (string header in headers)
                     //{
                     //    dt.Columns.Add(header);
@@ -237,7 +255,7 @@ namespace orcplan
                         dt.Rows.Add(dr);
                     }
 
-            }
+                }
             dt.AcceptChanges();
 
             dt.DefaultView.Sort = "TB";
@@ -309,14 +327,14 @@ namespace orcplan
             //
             OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
 
-            var planEvents = nextPlan.Tables[tblOINFO].Select().Where< DataRow > (row =>
-            {
-                return (((OINFO_STATE)row[colOINFO_STATE]) != OINFO_STATE.BEGINNING)
-                || ((((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && (((TimeSpan)row[colOINFO_TD]) >= TimeSpan.FromTicks(0)));
-            }).OrderBy<DataRow, DateTime>(row =>
-             {
-                 return GetDateTimeEvent(row);
-             });
+            var planEvents = nextPlan.Tables[tblOINFO].Select().Where<DataRow>(row =>
+         {
+             return (((OINFO_STATE)row[colOINFO_STATE]) != OINFO_STATE.BEGINNING)
+             || ((((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && (((TimeSpan)row[colOINFO_TD]) >= TimeSpan.FromTicks(0)));
+         }).OrderBy<DataRow, DateTime>(row =>
+          {
+              return GetDateTimeEvent(row);
+          });
 
             DataRow firstEvent = planEvents.FirstOrDefault();
             if (firstEvent != null)
@@ -396,7 +414,7 @@ namespace orcplan
 
                 if (((CINFO_STATE)rowCinfo[colCINFO_STATE]) == CINFO_STATE.ONLINE)
                 {
-                    if ((ordsTrans.Count() >= MAX_ORDERS_FOR_COURIERS) 
+                    if ((ordsTrans.Count() >= MAX_ORDERS_FOR_COURIERS)
                     || ((ordsTrans.Count() > 0) && (ordsCinfo.Count() > MAX_ORDERS_FOR_COURIERS)))
                     {
                         rowCinfo[colCINFO_STATE] = CINFO_STATE.ONROAD;
@@ -857,6 +875,19 @@ namespace orcplan
 
         private static void WriteHtmlVersionTheBestDeliveryPlan(DataSet theBestDeliveryPlan, string v, string pageTitle)
         {
+            StringBuilder scriptPlan = HtmlPlanBuilder(theBestDeliveryPlan, pageTitle);
+
+            File.WriteAllText(v, scriptPlan.ToString());
+
+            if (false)
+            {
+                Process proc = System.Diagnostics.Process.Start(v);
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+            }
+        }
+
+        private static StringBuilder HtmlPlanBuilder(DataSet theBestDeliveryPlan, string pageTitle)
+        {
             StringBuilder scriptPlan = new StringBuilder();
 
             scriptPlan.AppendLine("<!DOCTYPE html>");
@@ -977,15 +1008,7 @@ namespace orcplan
 
             scriptPlan.AppendLine("<style> html, body, #map { width: 100%; height: 100%; padding: 0; margin: 0; } </style></head>");
             scriptPlan.AppendLine("<body><div id = \"map\"></div></body></html>");
-
-
-            File.WriteAllText(v, scriptPlan.ToString());
-
-            if (false)
-            {
-                Process proc = System.Diagnostics.Process.Start(v);
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-            }
+            return scriptPlan;
         }
 
         private static int ScriptPlanAddOrder(int btnPos, StringBuilder scriptPlan, DataRow oInfo)
@@ -1025,7 +1048,7 @@ namespace orcplan
 
         private static object DispOrderState(OINFO_STATE oRDER_STATE)
         {
-            switch(oRDER_STATE)
+            switch (oRDER_STATE)
             {
                 case OINFO_STATE.BEGINNING: return "B";
                 case OINFO_STATE.COOKING: return "C";
@@ -1101,7 +1124,7 @@ namespace orcplan
             colRINFO_LNG = deliveryPlan.Tables[tblRINFO].Columns.IndexOf("LNG");
 
             tblCINFO = deliveryPlan.Tables.IndexOf("CINFO");
-            colCINFO_STATE= deliveryPlan.Tables[tblCINFO].Columns.IndexOf("CSTATE");
+            colCINFO_STATE = deliveryPlan.Tables[tblCINFO].Columns.IndexOf("CSTATE");
             colCINFO_CID = deliveryPlan.Tables[tblCINFO].Columns.IndexOf("CID");
             colCINFO_ADDRESS = deliveryPlan.Tables[tblCINFO].Columns.IndexOf("ADDRESS");
             colCINFO_LAT = deliveryPlan.Tables[tblCINFO].Columns.IndexOf("LAT");
@@ -1118,7 +1141,8 @@ namespace orcplan
 
             TimeSpan spanMAX = TimeSpan.MinValue;
             DataRow rowMAX = null;
-            deliveryPlan.Tables[tblOINFO].Select().All((r)=>{
+            deliveryPlan.Tables[tblOINFO].Select().All((r) =>
+            {
 
                 if ((TimeSpan)r[colOINFO_TD] > spanMAX)
                 {
@@ -1126,7 +1150,7 @@ namespace orcplan
                     rowMAX = r;
                 }
 
-                return true;    
+                return true;
             });
 
             switch ((OINFO_STATE)rowMAX[colOINFO_STATE])
@@ -1238,11 +1262,11 @@ namespace orcplan
             int minRinfo = int.MaxValue;
             int minCinfo = int.MaxValue;
 
-            foreach(DataRow order in initPlan.Tables[tblOINFO].Rows)
+            foreach (DataRow order in initPlan.Tables[tblOINFO].Rows)
             {
                 if (((OINFO_STATE)order["OSTATE"]) != OINFO_STATE.BEGINNING) continue;
 
-                foreach(DataRow rinfo in initPlan.Tables[tblRINFO].Rows)
+                foreach (DataRow rinfo in initPlan.Tables[tblRINFO].Rows)
                 {
                     //string r = GetGeoPathTotal2Gis(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
                     //string r = GetGeoPathTotalYandex(DateTime.MinValue, rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
@@ -1404,10 +1428,10 @@ namespace orcplan
 
         private static void PlanningRoutesParallel(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            Task[] cinfoTasks = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, Task>( row => 
-            {
-                return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
-            }).ToArray();
+            Task[] cinfoTasks = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, Task>(row =>
+           {
+               return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
+           }).ToArray();
 
             Task.WaitAll(cinfoTasks);
 
@@ -1649,7 +1673,7 @@ namespace orcplan
             //TspStop[] stops = tour.Cycle().ToArray();
             //int cnt = tour.Cycle().Count();
             //for (int i = 1; i < stops.Length; i++)
-            foreach(TspStop stop in tour.Cycle().Skip(1))
+            foreach (TspStop stop in tour.Cycle().Skip(1))
             {
                 //routeTunning.AddLast(stops[i].City.CityID);
                 routeTunning.AddLast(stop.City.CityID);
@@ -1725,7 +1749,7 @@ namespace orcplan
                     {
                         string RID = oInfo[colOINFO_RID].ToString();
 
-                        if(((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
+                        if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
                         {
                             ridTRANSTATE = RID;
                         }
@@ -1866,7 +1890,7 @@ namespace orcplan
         {
             //
 
-            foreach(DataRow cInfo in deliveryPlan.Tables[tblCINFO].Rows)
+            foreach (DataRow cInfo in deliveryPlan.Tables[tblCINFO].Rows)
             {
                 cInfo[colCINFO_ROUTE] = "-";
                 cInfo[colCINFO_ROUTELENGTH] = 0;
@@ -1957,7 +1981,7 @@ namespace orcplan
                         && rowOinfo[colOINFO_CID].ToString().Contains(row[colCINFO_CID].ToString());
                     });//.ToArray();
 
-                foreach(DataRow ord in ordsCinfo)
+                foreach (DataRow ord in ordsCinfo)
                 {
                     latS = ord["LAT"].ToString();
                     lngS = ord["LNG"].ToString();
@@ -2122,9 +2146,9 @@ namespace orcplan
 
             //if (File.Exists(xmlFileName))
             {
-            //    xmlFileName += "(" + Path.GetRandomFileName() + ")";
+                //    xmlFileName += "(" + Path.GetRandomFileName() + ")";
             }
-      
+
             Console.WriteLine($"write DP with total length {totalRouteLength}");
             //deliveryPlan.WriteXml(xmlFileName);
             //WriteHtmlVersionTheBestDeliveryPlan(deliveryPlan, htmlFileName);
@@ -2234,8 +2258,8 @@ namespace orcplan
                 {
                     if ((TimeSpan)dr[colOINFO_TD] > TimeSpan.FromTicks(0))
                     {
-                    //long tk = med.Ticks;
-                    div += TimeSpan.FromTicks(Math.Abs((med.Ticks - ((TimeSpan)dr[colOINFO_TD]).Ticks)) / rowsCount);
+                        //long tk = med.Ticks;
+                        div += TimeSpan.FromTicks(Math.Abs((med.Ticks - ((TimeSpan)dr[colOINFO_TD]).Ticks)) / rowsCount);
                     }
                     return true;
                 });
@@ -2891,7 +2915,8 @@ namespace orcplan
             public string GeoResponse
             {
                 get { return privGeoResponse; }
-                set {
+                set
+                {
                     privGeoResponse = value;
                     JsonValue json = JsonValue.Parse(value);
                     try
