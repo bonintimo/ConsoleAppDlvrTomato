@@ -78,22 +78,7 @@ namespace orcplan
 
             CreateSchemaForDeliveryPlan(args);
 
-            SimpleHttp.Route.Add(
-                "/",
-                (rqweb, rpweb, argsweb) =>
-                {
-                    //rpweb.AsText("<html><body>Welcome to Delivery Planning System</body></html>");
-                    if (TheBestDeliveryPlan != null)
-                    {
-                        StringBuilder sb = HtmlPlanBuilder(TheBestDeliveryPlan, "Delivery Planning System");
-                        //rpweb.AsText(sb.ToString(), "");
-                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
-                    }
-                }
-                );
-            SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
-                new Action<Task>((t) => { Console.WriteLine("HTTP server has been stoped"); })
-                );
+            StartWebServer();
 
             bool isContinue = true;
             DataSet deliveryPlan = null, nextPlan = null;
@@ -166,6 +151,31 @@ namespace orcplan
             //Task.WaitAll(taskList.ToArray());
 
             //Console.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
+        }
+
+        private static void StartWebServer()
+        {
+            SimpleHttp.Route.Add(
+                "/",
+                (rqweb, rpweb, argsweb) =>
+                {
+                    if (TheBestDeliveryPlan != null)
+                    {
+                        StringBuilder sb = HtmlPlanBuilder(TheBestDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"15\">");
+                        //rpweb.AsText(sb.ToString(), "");
+                        //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
+                    }
+                    else
+                    {
+                        rpweb.AsText("<html><body>Welcome to Delivery Planning System</body></html>");
+                    }
+                }
+                );
+
+            SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
+                new Action<Task>((t) => { Console.WriteLine("HTTP server has been stopped"); })
+                );
         }
 
         private static void InitBaseDirForDPR()
@@ -886,7 +896,7 @@ namespace orcplan
             }
         }
 
-        private static StringBuilder HtmlPlanBuilder(DataSet theBestDeliveryPlan, string pageTitle)
+        private static StringBuilder HtmlPlanBuilder(DataSet theBestDeliveryPlan, string pageTitle, string metaExt = "")
         {
             StringBuilder scriptPlan = new StringBuilder();
 
@@ -894,6 +904,7 @@ namespace orcplan
             //scriptPlan.AppendLine($"<html><head><title>TBDP {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()}</title>");
             scriptPlan.AppendLine($"<html><head><title>{pageTitle}</title>");
             scriptPlan.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>");
+            scriptPlan.AppendLine(metaExt);
             scriptPlan.AppendLine("<script src=\"https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=a1d0badd-df1d-4814-8d43-eab723c50133\" type=\"text/javascript\"></script>");
             //scriptPlan.AppendLine("<script src=\"animated_line.js\" type =\"text/javascript\"></script>");
             scriptPlan.AppendLine("<script type=\"text/javascript\">");
@@ -915,7 +926,7 @@ namespace orcplan
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             //scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
-            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
+            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:2000, float: 'right'}});");
 
