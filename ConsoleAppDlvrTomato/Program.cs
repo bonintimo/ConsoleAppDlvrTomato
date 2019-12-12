@@ -73,7 +73,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -99,7 +99,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -159,9 +159,9 @@ namespace orcplan
                 "/",
                 (rqweb, rpweb, argsweb) =>
                 {
-                    if (TheBestDeliveryPlan != null)
+                    if (TheWorkDeliveryPlan != null)
                     {
-                        StringBuilder sb = HtmlPlanBuilder(TheBestDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"15\">");
+                        StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"15\">");
                         //rpweb.AsText(sb.ToString(), "");
                         //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
                         rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
@@ -662,6 +662,7 @@ namespace orcplan
         private static DataSet TheBestDeliveryPlan = null;
         private static DataSet TheFastDeliveryPlan = null;
         private static DataSet TheShortDeliveryPlan = null;
+        private static DataSet TheWorkDeliveryPlan = null;
 
         private static Stopwatch WatchPlanningForCartesian = new Stopwatch();
         private static Stopwatch WatchPlanningForCartesianOrderStateBeginning = new Stopwatch();
@@ -1399,7 +1400,8 @@ namespace orcplan
                 // {
                 WatchPlanningForCartesian.Stop();
                 //PlanningForCinfo(dir, 0, deliveryPlan, bgnnOrders, 0);
-                Console.WriteLine(dir);
+                //Console.WriteLine(dir);
+
                 PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
                 // });
                 //task.Start();
@@ -2160,7 +2162,8 @@ namespace orcplan
                 //    xmlFileName += "(" + Path.GetRandomFileName() + ")";
             }
 
-            Console.WriteLine($"write DP with total length {totalRouteLength}");
+            //Console.WriteLine($"write DP with total length {totalRouteLength}");
+            Console.Write(".");
             //deliveryPlan.WriteXml(xmlFileName);
             //WriteHtmlVersionTheBestDeliveryPlan(deliveryPlan, htmlFileName);
 
@@ -2212,6 +2215,8 @@ namespace orcplan
                     Console.WriteLine($"new TSDP");
                 }
             }
+
+            TheWorkDeliveryPlan = TheBestDeliveryPlan;
 
             WatchWriteCurrentDeliveryPlan.Stop();
         }
