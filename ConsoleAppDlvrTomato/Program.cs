@@ -73,12 +73,18 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
 
             StartWebServer();
+
+            if (File.Exists("georouteinfo.json"))
+            {
+                GeoRouteInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, GeoRouteData>>(File.ReadAllText("georouteinfo.json"));
+                GeoRouteInfoQuantity = GeoRouteInfo.Count;
+            }
 
             bool isContinue = true;
             DataSet deliveryPlan = null, nextPlan = null;
@@ -99,7 +105,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C9.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -151,6 +157,19 @@ namespace orcplan
             //Task.WaitAll(taskList.ToArray());
 
             //Console.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
+        }
+
+        private static int GeoRouteInfoQuantity = 0;
+
+        private static void StoreGeoRouteInfo()
+        {
+            if (GeoRouteInfo.Count != GeoRouteInfoQuantity)
+            {
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(GeoRouteInfo, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText("georouteinfo.json", json);
+
+                GeoRouteInfoQuantity = GeoRouteInfo.Count;
+            }
         }
 
         private static void StartWebServer()
@@ -824,6 +843,7 @@ namespace orcplan
 
             File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
+            StoreGeoRouteInfo();
             return TheBestDeliveryPlan;
         }
 
