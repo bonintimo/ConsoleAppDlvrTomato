@@ -1459,14 +1459,19 @@ namespace orcplan
             }
         }
 
-        private class BuildingCinfoPlan
+        private class BuildingCinfoPlan : EventWaitHandle
         {
+            public BuildingCinfoPlan() : base(false, EventResetMode.ManualReset)
+            {
+
+            }
+
             string dir { get; set; }
             DataSet deliveryPlan { get; set; }
             DataRow[] bgnnOrders { get; set; }
             DataRow row { get; set; }
 
-            ManualResetEvent mre = new ManualResetEvent(false);
+            //ManualResetEvent mre = new ManualResetEvent(false);
         }
 
         private static BuildingCinfoPlan[] BldCinfoPlans = null;
