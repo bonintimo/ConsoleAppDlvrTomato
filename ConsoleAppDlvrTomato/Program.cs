@@ -73,7 +73,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -1458,6 +1458,18 @@ namespace orcplan
                 }
             }
         }
+
+        private class BuildingCinfoPlan
+        {
+            string dir { get; set; }
+            DataSet deliveryPlan { get; set; }
+            DataRow[] bgnnOrders { get; set; }
+            DataRow row { get; set; }
+
+            ManualResetEvent mre = new ManualResetEvent(false);
+        }
+
+        private static BuildingCinfoPlan[] BldCinfoPlans = null;
 
         private static void PlanningRoutesParallel(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
