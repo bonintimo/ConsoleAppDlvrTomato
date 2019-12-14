@@ -799,6 +799,15 @@ namespace orcplan
                 TheFastDeliveryPlan = null;
                 TheShortDeliveryPlan = null;
 
+                BldCinfoPlans = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, BuildingCinfoPlan>(row =>
+                 {
+                     BuildingCinfoPlan info = new BuildingCinfoPlan();
+                     info.deliveryPlan = deliveryPlan;
+                     info.row = row;
+                     info.BuildRouteForCinfoSecondFld = BuildRouteForCinfoSecond;
+                     return info;
+                 }).ToArray();
+
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
@@ -1459,17 +1468,28 @@ namespace orcplan
             }
         }
 
+        private delegate Func<bool> BuildRouteForCinfoSecondDlgt(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo);
+
         private class BuildingCinfoPlan : EventWaitHandle
         {
-            public BuildingCinfoPlan() : base(false, EventResetMode.ManualReset)
+            public BuildingCinfoPlan() : base(false, EventResetMode.AutoReset)
             {
-
+                Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        WaitOne();
+                        BuildRouteForCinfoSecondFld(dir, deliveryPlan, bgnnOrders, row);
+                        Set();
+                    }
+                });
             }
 
-            string dir { get; set; }
-            DataSet deliveryPlan { get; set; }
-            DataRow[] bgnnOrders { get; set; }
-            DataRow row { get; set; }
+            public string dir { get; set; }
+            public DataSet deliveryPlan { get; set; }
+            public DataRow[] bgnnOrders { get; set; }
+            public DataRow row { get; set; }
+            public BuildRouteForCinfoSecondDlgt BuildRouteForCinfoSecondFld { get; set; }
 
             //ManualResetEvent mre = new ManualResetEvent(false);
         }
@@ -1478,18 +1498,31 @@ namespace orcplan
 
         private static void PlanningRoutesParallel(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            Task[] cinfoTasks = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, Task>(row =>
-           {
-               return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
-           }).ToArray();
-
-            Task.WaitAll(cinfoTasks);
-
-            if (!cinfoTasks.All((t) => { return ((Task<bool>)t).Result; }))
+            BldCinfoPlans.All(info =>
             {
-                Console.WriteLine("The building of routes has a problem.");
-                return;
-            }
+                info.dir = dir;
+                info.bgnnOrders = bgnnOrders;
+                info.Set();
+                return true;
+            });
+
+            ManualResetEvent.WaitAll(BldCinfoPlans);
+
+            //Task[] cinfoTasks = 
+            //deliveryPlan.Tables[tblCINFO].Select().All(row =>//.Select<DataRow, Task>(row =>
+           //{
+
+               //return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
+           //    return true;
+           //});//.ToArray();
+
+            //Task.WaitAll(cinfoTasks);
+
+            //if (!cinfoTasks.All((t) => { return ((Task<bool>)t).Result; }))
+            //{
+            //    Console.WriteLine("The building of routes has a problem.");
+            //    return;
+            //}
 
             deliveryPlan.AcceptChanges();
 
