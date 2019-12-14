@@ -73,7 +73,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -105,7 +105,7 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C9.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -1500,7 +1500,7 @@ namespace orcplan
                 try
                 {
                     // Change the thread priority to the one required.
-                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+                    Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;//.Lowest;
 
                     BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, cInfo);
                 }
@@ -3116,8 +3116,8 @@ namespace orcplan
 
                 string requestString = String.Concat("http://router.project-osrm.org/route/v1/driving/", lngS, ",", latS, ";", lngD, ",", latD, "?overview=false");
 
-                var request = (HttpWebRequest)WebRequest.Create(requestString);
-                request.Method = "GET";
+                HttpWebRequest request = null;// = (HttpWebRequest)WebRequest.Create(requestString);
+                //request.Method = "GET";
 
                 //request.Headers[]=;
 
@@ -3140,6 +3140,8 @@ namespace orcplan
                         //    stream.Write(data, 0, data.Length);
                         //}
 
+                        request = (HttpWebRequest)WebRequest.Create(requestString);
+                        request.Method = "GET";
                         bool isRepeat = false;
                         WebResponse response = null;
                         do
@@ -3173,6 +3175,8 @@ namespace orcplan
                     {
                         if ((timeMark - geoInfo.TimeMark) > TimeSpan.FromDays(2))//.FromMinutes(30))
                         {
+                            request = (HttpWebRequest)WebRequest.Create(requestString);
+                            request.Method = "GET";
                             bool isRepeat = false;
                             WebResponse response = null;
                             do
