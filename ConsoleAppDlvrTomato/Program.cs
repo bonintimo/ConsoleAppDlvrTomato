@@ -50,7 +50,7 @@ namespace orcplan
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 5;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -1084,12 +1084,12 @@ namespace orcplan
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{oInfo[colOINFO_LAT].ToString()}, {oInfo[colOINFO_LNG].ToString()}], {{ iconContent: '{oInfo[colOINFO_OID]} {DispOrderState((OINFO_STATE)oInfo[colOINFO_STATE])} {oInfo[colOINFO_RID]} {oInfo[colOINFO_CID]} {tdfrmt}', hintContent: '{oInfo[colOINFO_LAT]} {oInfo[colOINFO_LNG]} {oInfo[colOINFO_ADDRESS]}'}}, {{preset: 'islands#greenStretchyIcon'}} ));");
             }
 
-            string ordrTimes = ((DateTime)oInfo[colOINFO_TB]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.BEGINNING) ? "(HH:mm)" : " HH:mm "))
-                + ((DateTime)oInfo[colOINFO_TC]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.COOKING) ? "(HH:mm)" : " HH:mm "))
-                + ((DateTime)oInfo[colOINFO_TR]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.READY) ? "(HH:mm)" : " HH:mm "))
-                + ((DateTime)oInfo[colOINFO_TT]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? "(HH:mm)" : " HH:mm "))
-                + ((DateTime)oInfo[colOINFO_TP]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? "(HH:mm)" : " HH:mm "))
-                + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? "(HH:mm)" : " HH:mm"));
+            string ordrTimes = ((DateTime)oInfo[colOINFO_TB]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.BEGINNING) ? " HH:mm B" : " HH:mm ."))
+                + ((DateTime)oInfo[colOINFO_TC]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.COOKING) ? " HH:mm C" : " HH:mm ."))
+                + ((DateTime)oInfo[colOINFO_TR]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.READY) ? " HH:mm R" : " HH:mm ."))
+                + ((DateTime)oInfo[colOINFO_TT]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? " HH:mm T" : " HH:mm ."))
+                + ((DateTime)oInfo[colOINFO_TP]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? " HH:mm P" : " HH:mm ."))
+                + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? " HH:mm E" : " HH:mm ."));
             scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} {ordrTimes}\");");
             scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
             //scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
