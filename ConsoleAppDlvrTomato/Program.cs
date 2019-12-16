@@ -184,7 +184,7 @@ namespace orcplan
                 "/actor/{aname}/{atime}/{alat}/{alng}/",
                 (rqweb, rpweb, argsweb) =>
                 {
-                    rpweb.AsText($"actor {argsweb["aname"]} at {argsweb["atime"]} is placed at {argsweb["alat"]} {argsweb["alng"]}");
+                    rpweb.AsText($"Hi, {argsweb["aname"]}! Your {argsweb["atime"]} at {argsweb["alat"]} {argsweb["alng"]} is received {DateTime.Now.ToString()}");
                 });
 
             SimpleHttp.Route.Add(
