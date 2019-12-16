@@ -174,6 +174,19 @@ namespace orcplan
 
         private static void StartWebServer()
         {
+            //SimpleHttp.Route.Add(
+            //    "/actor",
+            //    (rqweb, rpweb, argsweb) =>
+            //    {
+            //    });
+
+            SimpleHttp.Route.Add(
+                "/actor/{aname}/{atime}/{alat}/{alng}/",
+                (rqweb, rpweb, argsweb) =>
+                {
+                    rpweb.AsText($"actor {argsweb["aname"]} at {argsweb["atime"]} is placed at {argsweb["alat"]} {argsweb["alng"]}");
+                });
+
             SimpleHttp.Route.Add(
                 "/",
                 (rqweb, rpweb, argsweb) =>
@@ -189,8 +202,7 @@ namespace orcplan
                     {
                         rpweb.AsText("<html><body>Welcome to Delivery Planning System</body></html>");
                     }
-                }
-                );
+                });
 
             SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
                 new Action<Task>((t) => { Console.WriteLine("HTTP server has been stopped"); })
@@ -406,7 +418,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 32);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 64);
 
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
                 Thread.Sleep(w);
@@ -960,6 +972,8 @@ namespace orcplan
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:2000, float: 'right'}});");
 
+            scriptPlan.AppendLine(ConsoleAppDlvrTomato.Properties.Resources.listbox4map);
+
             int btnPosition = 200;
 
             foreach (DataRow oInfo in theBestDeliveryPlan.Tables[tblOINFO].Select().Where(r => { return ((TimeSpan)r[colOINFO_TD]) < TimeSpan.Zero; }))
@@ -971,7 +985,7 @@ namespace orcplan
             {
                 int hashCode = rInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: red; background-color: lightred; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: black; background-color: #F08080; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{rInfo[colRINFO_LAT].ToString()}, {rInfo[colRINFO_LNG].ToString()}], {{ iconContent: '{rInfo[colRINFO_RID]}', hintContent: '{rInfo[colRINFO_LAT]} {rInfo[colRINFO_LNG]} {rInfo[colRINFO_ADDRESS]}'}}, {{preset: 'islands#redStretchyIcon'}} ));");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{rInfo[colRINFO_RID]}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
@@ -989,7 +1003,7 @@ namespace orcplan
             {
                 int hashCode = cInfo.GetHashCode();
                 scriptPlan.AppendLine("{");
-                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: blue; background-color: lightblue; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
+                scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: black; background-color: #87CEFA; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
                 scriptPlan.AppendLine($"var coll{hashCode} = new ymaps.GeoObjectCollection(null, {{ }});");
                 scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{cInfo[colCINFO_CID]} {cInfo[colCINFO_ROUTELENGTH]} {cInfo[colCINFO_ROUTE].ToString()}\");");
                 scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
@@ -1056,7 +1070,7 @@ namespace orcplan
         {
             int hashCode = oInfo.GetHashCode();
             scriptPlan.AppendLine("{");
-            scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: green; background-color: lightgreen; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
+            scriptPlan.AppendLine($"var btnLayout = ymaps.templateLayoutFactory.createClass('<div style=\"font-family: Arial,Helvetica,sans-serif; font-size: 12px; color: black; background-color: #90EE90; border: {{% if state.selected %}}3{{% else %}}1{{% endif %}}px solid; padding: 3px;\"><span>{{{{data.content}}}}</span></div>');");
 
             TimeSpan td = ((TimeSpan)oInfo[colOINFO_TD]);
             string tdfrmt = td < TimeSpan.Zero ? td.ToString(@"\(hh\:mm\)") : td.ToString(@"hh\:mm");
@@ -1510,17 +1524,18 @@ namespace orcplan
 
             //ManualResetEvent.WaitAll(BldCinfoPlans);
 
-            System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(), row => {
+            System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(), row =>
+            {
                 //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
                 BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row);
             });
             //Task[] cinfoTasks = 
             //deliveryPlan.Tables[tblCINFO].Select().All(row =>//.Select<DataRow, Task>(row =>
-           //{
+            //{
 
-               //return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
-           //    return true;
-           //});//.ToArray();
+            //return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
+            //    return true;
+            //});//.ToArray();
 
             //Task.WaitAll(cinfoTasks);
 

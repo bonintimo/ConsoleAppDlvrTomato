@@ -1,0 +1,28 @@
+{
+    listBoxItems = [
+        new ymaps.control.ListBoxItem({
+            data: {
+                content: 'Москва',
+                center: [55.751574, 37.573856],
+                zoom: 9
+            }
+        }),
+        new ymaps.control.ListBoxItem({
+            data: {
+                content: 'Омск',
+                center: [54.990215, 73.365535],
+                zoom: 9
+            }
+        })
+    ],
+
+    listBox = new ymaps.control.ListBox({
+            items: listBoxItems,
+            data: {
+                title: 'Выберите пункт'
+            },
+        });
+
+    
+    myMap.controls.add(listBox, {float: 'left'});
+}
