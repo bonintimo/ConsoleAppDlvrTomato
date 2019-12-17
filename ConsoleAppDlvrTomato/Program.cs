@@ -47,10 +47,11 @@ namespace orcplan
     static class MainClass
     {
 
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
+        public static bool DYNAMIC_PARAMS = true;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -707,6 +708,8 @@ namespace orcplan
 
         private static Stopwatch WatchGetRouteInfos = new Stopwatch();
 
+        private static Stopwatch TimeForPlanning = new Stopwatch();
+
         private static DataSet PlanningForOrders(DataSet deliveryPlan)
         {
             TheBestDeliveryPlan = null;// deliveryPlan;
@@ -797,6 +800,9 @@ namespace orcplan
 
             // 20190504 DataSet dlvrPlan = deliveryPlan.Copy();
 
+            TimeForPlanning.Reset();
+            TimeForPlanning.Start();
+
             DataRow[] bgnnOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
             {
                 return ((OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING);
@@ -834,6 +840,34 @@ namespace orcplan
             //TextWriter Filestream1 = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, @"georouteinfo.xml"));
             //serialiser1.Serialize(Filestream1, GeoRouteInfo);
             //Filestream1.Close();
+
+            TimeForPlanning.Stop();
+
+            if ((DYNAMIC_PARAMS) && (TimeForPlanning.ElapsedMilliseconds > 15000))
+            {
+                if (MAX_RESTAURANTS_FOR_PLANNING > 1)
+                {
+                    MAX_RESTAURANTS_FOR_PLANNING -= 1;
+                }
+                if (MAX_COURIERS_FOR_PLANNING > 1)
+                {
+                    MAX_COURIERS_FOR_PLANNING -= 1;
+                }
+            }
+            else
+            {
+                if (MAX_COURIERS_FOR_PLANNING < 3)
+                {
+                    MAX_COURIERS_FOR_PLANNING += 1;
+                }
+                else
+                {
+                    if (MAX_RESTAURANTS_FOR_PLANNING < 2)
+                    {
+                        MAX_RESTAURANTS_FOR_PLANNING += 1;
+                    }
+                }
+            }
 
 
             appLog.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
