@@ -48,10 +48,10 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
-        public static bool DYNAMIC_PARAMS = true;
+        public static bool DYNAMIC_PARAMS = false;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -74,7 +74,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -85,6 +85,11 @@ namespace orcplan
             {
                 GeoRouteInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, GeoRouteData>>(File.ReadAllText("georouteinfo.json"));
                 GeoRouteInfoQuantity = GeoRouteInfo.Count;
+            }
+
+            if (File.Exists("progresstimings.json"))
+            {
+                ProgressTimings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, TimingOfPlans>>(File.ReadAllText("progresstimings.json"));
             }
 
             bool isContinue = true;
@@ -845,28 +850,31 @@ namespace orcplan
 
             UpdateProgressTimings(TheBestDeliveryPlan, TimeForPlanning);
 
-            if ((DYNAMIC_PARAMS) && (TimeForPlanning.ElapsedMilliseconds > 15000))
+            if (DYNAMIC_PARAMS)
             {
-                if (MAX_RESTAURANTS_FOR_PLANNING > 1)
+                if (TimeForPlanning.ElapsedMilliseconds > 15000)
                 {
-                    MAX_RESTAURANTS_FOR_PLANNING -= 1;
-                }
-                if (MAX_COURIERS_FOR_PLANNING > 1)
-                {
-                    MAX_COURIERS_FOR_PLANNING -= 1;
-                }
-            }
-            else
-            {
-                if (MAX_COURIERS_FOR_PLANNING < 3)
-                {
-                    MAX_COURIERS_FOR_PLANNING += 1;
+                    if (MAX_RESTAURANTS_FOR_PLANNING > 1)
+                    {
+                        MAX_RESTAURANTS_FOR_PLANNING -= 1;
+                    }
+                    if (MAX_COURIERS_FOR_PLANNING > 1)
+                    {
+                        MAX_COURIERS_FOR_PLANNING -= 1;
+                    }
                 }
                 else
                 {
-                    if (MAX_RESTAURANTS_FOR_PLANNING < 2)
+                    if (MAX_COURIERS_FOR_PLANNING < 3)
                     {
-                        MAX_RESTAURANTS_FOR_PLANNING += 1;
+                        MAX_COURIERS_FOR_PLANNING += 1;
+                    }
+                    else
+                    {
+                        if (MAX_RESTAURANTS_FOR_PLANNING < 2)
+                        {
+                            MAX_RESTAURANTS_FOR_PLANNING += 1;
+                        }
                     }
                 }
             }
@@ -917,7 +925,7 @@ namespace orcplan
 
         private static void UpdateProgressTimings(DataSet theBestDeliveryPlan, Stopwatch timeForPlanning)
         {
-            string sig = GetProgressCountSignature(theBestDeliveryPlan);
+            string sig = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}:{GetProgressCountSignature(theBestDeliveryPlan)}";
 
             TimingOfPlans timings = null;
             if (ProgressTimings.TryGetValue(sig, out timings))
