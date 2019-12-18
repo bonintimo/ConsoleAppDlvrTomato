@@ -843,6 +843,8 @@ namespace orcplan
 
             TimeForPlanning.Stop();
 
+            UpdateProgressTimings(TheBestDeliveryPlan, TimeForPlanning);
+
             if ((DYNAMIC_PARAMS) && (TimeForPlanning.ElapsedMilliseconds > 15000))
             {
                 if (MAX_RESTAURANTS_FOR_PLANNING > 1)
@@ -889,17 +891,62 @@ namespace orcplan
             WriteDeliveryPlan("TFDP", dir, TheFastDeliveryPlan);
             WriteDeliveryPlan("TSDP", dir, TheShortDeliveryPlan);
 
-            int cntTB = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING).Count();
-            int cntTC = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.COOKING).Count();
-            int cntTR = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.READY).Count();
-            int cntTT = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.TRANSPORTING).Count();
-            int cntTP = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.PLACING).Count();
-            int cntTE = TheBestDeliveryPlan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.ENDED).Count();
+            int cntTB, cntTC, cntTR, cntTT, cntTP, cntTE;
+            CalcProgressCount(TheBestDeliveryPlan, out cntTB, out cntTC, out cntTR, out cntTT, out cntTP, out cntTE);
 
             File.AppendAllText(Path.Combine(BaseDirectoryForDPR, "EL-O-RC.tsv"), $"{buildt}\t{cntTB}\t{cntTC}\t{cntTR}\t{cntTT}\t{cntTP}\t{cntTE}\t{dir}\t{finishDateTime - beginDateTime}\t{beginDateTime}\t{finishDateTime}\t{GeoRouteInfo.Count}\n");
 
             StoreGeoRouteInfo();
+            StoreProgressTimings();
             return TheBestDeliveryPlan;
+        }
+
+        private static void StoreProgressTimings()
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(ProgressTimings, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText("progresstimings.json", json);
+        }
+
+        private class TimingOfPlans
+        {
+            public long MinTime { get; set; }
+            public long MaxTime { get; set; }
+        }
+
+        private static Dictionary<string, TimingOfPlans> ProgressTimings = new Dictionary<string, TimingOfPlans>();
+
+        private static void UpdateProgressTimings(DataSet theBestDeliveryPlan, Stopwatch timeForPlanning)
+        {
+            string sig = GetProgressCountSignature(theBestDeliveryPlan);
+
+            TimingOfPlans timings = null;
+            if (ProgressTimings.TryGetValue(sig, out timings))
+            {
+                if (timings.MinTime > timeForPlanning.ElapsedMilliseconds) timings.MinTime = timeForPlanning.ElapsedMilliseconds;
+                if (timings.MaxTime < timeForPlanning.ElapsedMilliseconds) timings.MaxTime = timeForPlanning.ElapsedMilliseconds;
+            }
+            else
+            {
+                ProgressTimings.Add(sig, new TimingOfPlans() { MinTime = timeForPlanning.ElapsedMilliseconds, MaxTime = timeForPlanning.ElapsedMilliseconds });
+            }
+        }
+
+        private static string GetProgressCountSignature(DataSet plan)
+        {
+            int cntTB, cntTC, cntTR, cntTT, cntTP, cntTE;
+            CalcProgressCount(TheBestDeliveryPlan, out cntTB, out cntTC, out cntTR, out cntTT, out cntTP, out cntTE);
+
+            return $"B{cntTB.ToString("D3")}C{cntTC.ToString("D3")}R{cntTR.ToString("D3")}T{cntTT.ToString("D3")}P{cntTP.ToString("D3")}E{cntTE.ToString("D3")}";
+        }
+
+        private static void CalcProgressCount(DataSet plan, out int cntTB, out int cntTC, out int cntTR, out int cntTT, out int cntTP, out int cntTE)
+        {
+            cntTB = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING).Count();
+            cntTC = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.COOKING).Count();
+            cntTR = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.READY).Count();
+            cntTT = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.TRANSPORTING).Count();
+            cntTP = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.PLACING).Count();
+            cntTE = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.ENDED).Count();
         }
 
         private static void WriteDeliveryPlan(string kind, string dir, DataSet plan)
@@ -1002,7 +1049,7 @@ namespace orcplan
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             //scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
-            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
+            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{GetProgressCountSignature(theBestDeliveryPlan)} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:2000, float: 'right'}});");
 
