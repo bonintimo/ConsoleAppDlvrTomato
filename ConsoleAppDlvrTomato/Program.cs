@@ -47,8 +47,8 @@ namespace orcplan
     static class MainClass
     {
 
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
-        public static int MAX_COURIERS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
@@ -74,7 +74,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -1069,7 +1069,9 @@ namespace orcplan
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             //scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
-            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{GetProgressCountSignature(theBestDeliveryPlan)} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
+
+            string sigH = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}";
+            scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{sigH}:{GetProgressCountSignature(theBestDeliveryPlan)} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
             scriptPlan.AppendLine($"btnBuildOrdr.events.add(['click'], function (sender) {{ if(btnBuildOrdr.isSelected()) {{ setCenterPlan(); }} else {{ setCenterOrder(); }} }});");
             scriptPlan.AppendLine($"myMap.controls.add( btnBuildOrdr, {{maxWidth:2000, float: 'right'}});");
 
