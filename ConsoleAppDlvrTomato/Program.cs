@@ -48,7 +48,7 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
@@ -64,6 +64,7 @@ namespace orcplan
 
         public static void Main(string[] args)
         {
+            Console.Title = $"Delivery Planning System";
             Console.WriteLine($"Delivery Planning System");
             Console.WriteLine($"{Environment.CurrentDirectory}");
             Console.WriteLine($"PC:{Environment.ProcessorCount} CLR:{Environment.Version} WS:{Environment.WorkingSet}");
@@ -123,7 +124,7 @@ namespace orcplan
                         break;
 
                     case "RUN":
-                        while ((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.Rows.Count > 0))
+                        while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.Rows.Count > 0)) && !Console.KeyAvailable)
                         {
                             stateNext = ApplyNextEvent(nextPlan);
                             deliveryPlan = nextPlan;
