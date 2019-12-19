@@ -48,7 +48,7 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
@@ -89,7 +89,7 @@ namespace orcplan
 
             if (File.Exists("progresstimings.json"))
             {
-                ProgressTimings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, TimingOfPlans>>(File.ReadAllText("progresstimings.json"));
+                ProgressTimings = Newtonsoft.Json.JsonConvert.DeserializeObject<SortedDictionary<string, SortedDictionary<string, TimingOfPlans>>>(File.ReadAllText("progresstimings.json"));
             }
 
             bool isContinue = true;
@@ -921,21 +921,33 @@ namespace orcplan
             public long MaxTime { get; set; }
         }
 
-        private static Dictionary<string, TimingOfPlans> ProgressTimings = new Dictionary<string, TimingOfPlans>();
+        private static SortedDictionary<string, SortedDictionary<string, TimingOfPlans>> ProgressTimings = new SortedDictionary<string, SortedDictionary<string, TimingOfPlans>>();
 
         private static void UpdateProgressTimings(DataSet theBestDeliveryPlan, Stopwatch timeForPlanning)
         {
-            string sig = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}:{GetProgressCountSignature(theBestDeliveryPlan)}";
+            string sigH = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}";
+            string sigL = $"{GetProgressCountSignature(theBestDeliveryPlan)}";
 
+            SortedDictionary<string, TimingOfPlans> dictTimings = null;
             TimingOfPlans timings = null;
-            if (ProgressTimings.TryGetValue(sig, out timings))
+            if (ProgressTimings.TryGetValue(sigH, out dictTimings))
             {
-                if (timings.MinTime > timeForPlanning.ElapsedMilliseconds) timings.MinTime = timeForPlanning.ElapsedMilliseconds;
-                if (timings.MaxTime < timeForPlanning.ElapsedMilliseconds) timings.MaxTime = timeForPlanning.ElapsedMilliseconds;
+                if (dictTimings.TryGetValue(sigL, out timings))
+                {
+                    if (timings.MinTime > timeForPlanning.ElapsedMilliseconds) timings.MinTime = timeForPlanning.ElapsedMilliseconds;
+                    if (timings.MaxTime < timeForPlanning.ElapsedMilliseconds) timings.MaxTime = timeForPlanning.ElapsedMilliseconds;
+                }
+                else
+                {
+                    dictTimings.Add(sigL, new TimingOfPlans() { MinTime = timeForPlanning.ElapsedMilliseconds, MaxTime = timeForPlanning.ElapsedMilliseconds });
+                }
             }
             else
             {
-                ProgressTimings.Add(sig, new TimingOfPlans() { MinTime = timeForPlanning.ElapsedMilliseconds, MaxTime = timeForPlanning.ElapsedMilliseconds });
+                dictTimings = new SortedDictionary<string, TimingOfPlans>();
+
+                dictTimings.Add(sigL, new TimingOfPlans() { MinTime = timeForPlanning.ElapsedMilliseconds, MaxTime = timeForPlanning.ElapsedMilliseconds });
+                ProgressTimings.Add(sigH, dictTimings);
             }
         }
 
