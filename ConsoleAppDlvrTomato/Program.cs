@@ -48,7 +48,7 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
@@ -75,7 +75,8 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            //ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
@@ -112,7 +113,8 @@ namespace orcplan
 
                     case "INIT":
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        //deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
@@ -822,6 +824,8 @@ namespace orcplan
                 TheBestDeliveryPlan = null;// deliveryPlan;
                 TheFastDeliveryPlan = null;
                 TheShortDeliveryPlan = null;
+                bestTotalDistance = int.MaxValue;
+                bestTotalDuration = int.MaxValue;
 
                 //BldCinfoPlans = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, BuildingCinfoPlan>(row =>
                 // {
@@ -1194,7 +1198,7 @@ namespace orcplan
                 + ((DateTime)oInfo[colOINFO_TT]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.TRANSPORTING) ? " HH:mm T" : " HH:mm ~"))
                 + ((DateTime)oInfo[colOINFO_TP]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.PLACING) ? " HH:mm P" : " HH:mm ~"))
                 + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? " HH:mm E" : " HH:mm ~"));
-            scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} ~ {ordrTimes}\");");
+            scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} ~ {ordrTimes} - {oInfo[colOINFO_CID]}\");");
             scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
             //scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
             scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 15, right: 'auto', top: {btnPos}, bottom: 'auto' }} }});");
@@ -1616,6 +1620,11 @@ namespace orcplan
 
         private static BuildingCinfoPlan[] BldCinfoPlans = null;
 
+        private static int workTotalDistance = 0;
+        private static int workTotalDuration = 0;
+        private static int bestTotalDistance = int.MaxValue;
+        private static int bestTotalDuration = int.MaxValue;
+
         private static void PlanningRoutesParallel(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
             //BldCinfoPlans.All(info =>
@@ -1628,11 +1637,39 @@ namespace orcplan
 
             //ManualResetEvent.WaitAll(BldCinfoPlans);
 
-            System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(), row =>
+            workTotalDistance = 0;
+            workTotalDuration = 0;
+
+            CancellationTokenSource cts = new CancellationTokenSource();
+            ParallelOptions po = new ParallelOptions() { CancellationToken = cts.Token, MaxDegreeOfParallelism = Environment.ProcessorCount };
+            try
             {
-                //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
-                BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row);
-            });
+                ParallelLoopResult parResult = System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(),
+                    po,
+                    (row, loopState) =>
+                {
+                    //if (loopState.IsStopped)
+                    //{
+                    //    return;
+                    //}
+                    //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
+                    BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row);
+                    lock (deliveryPlan)
+                    {
+                        if ((workTotalDistance > bestTotalDistance) && (workTotalDuration > bestTotalDuration))
+                        {
+                            //loopState.Stop();
+                            cts.Cancel();
+                        }
+                    }
+                    po.CancellationToken.ThrowIfCancellationRequested();
+                });
+            }
+            catch (OperationCanceledException e)
+            {
+                Console.Write("X");
+            }
+            //finally { cts.Dispose(); }
             //Task[] cinfoTasks = 
             //deliveryPlan.Tables[tblCINFO].Select().All(row =>//.Select<DataRow, Task>(row =>
             //{
@@ -1649,11 +1686,16 @@ namespace orcplan
             //    return;
             //}
 
-            deliveryPlan.AcceptChanges();
+            //if (parResult.IsCompleted)
+            if (!cts.IsCancellationRequested)
+            {
+                deliveryPlan.AcceptChanges();
 
-            int totalRouteLength = CalcTotalRouteLength(deliveryPlan);
+                int totalRouteLength = CalcTotalRouteLength(deliveryPlan);
 
-            WriteCurrentDeliveryPlan(dir, deliveryPlan, totalRouteLength);
+                WriteCurrentDeliveryPlan(dir, deliveryPlan, totalRouteLength);
+            }
+            cts.Dispose();
         }
 
         private static int CalcTotalRouteLength(DataSet deliveryPlan)
@@ -1808,11 +1850,14 @@ namespace orcplan
 
             lock (deliveryPlan)
             {
-                int routeLength = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
+                RouteTotalInfos infos = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
                 //deliveryPlan.AcceptChanges();
 
                 cInfo[colCINFO_ROUTE] = route;
-                cInfo[colCINFO_ROUTELENGTH] = routeLength;
+                cInfo[colCINFO_ROUTELENGTH] = infos.Distance;
+
+                workTotalDistance += infos.Distance;
+                workTotalDuration += infos.Duration;
             }
         }
 
@@ -2083,11 +2128,11 @@ namespace orcplan
 
                 lock (deliveryPlan)
                 {
-                    int routeLength = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
+                    RouteTotalInfos infos = GetRouteInfos(cInfo.Table.Rows.IndexOf(cInfo), deliveryPlan, routeList);
                     //deliveryPlan.AcceptChanges();
 
                     cInfo[colCINFO_ROUTE] = route;
-                    cInfo[colCINFO_ROUTELENGTH] = routeLength;
+                    cInfo[colCINFO_ROUTELENGTH] = infos.Distance;
                 }
 
                 return true;
@@ -2220,7 +2265,8 @@ namespace orcplan
 
             string debugCinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
 
-            Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
+            //Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
+            Console.Write(".");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
@@ -2259,7 +2305,8 @@ namespace orcplan
 
             string debugRinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
 
-            Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
+            //Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
+            Console.Write(".");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
@@ -2396,6 +2443,7 @@ namespace orcplan
                     Console.WriteLine($"new TFDP");
                 }
             }
+            bestTotalDuration = (int)((TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).TotalSeconds;
 
             if (TheShortDeliveryPlan == null)
             {
@@ -2410,6 +2458,7 @@ namespace orcplan
                     Console.WriteLine($"new TSDP");
                 }
             }
+            bestTotalDistance = (int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"];
 
             TheWorkDeliveryPlan = TheBestDeliveryPlan;
 
@@ -2512,16 +2561,16 @@ namespace orcplan
             {
                 string route = listRoute.Aggregate<string, string, string>("", (a, b) => String.Concat(a, "-", b), a => a) + "-";
 
-                int routeLength = GetRouteInfos(vCinfo, deliveryPlan, listRoute);
+                RouteTotalInfos infos = GetRouteInfos(vCinfo, deliveryPlan, listRoute);
 
                 DataRowCollection CinfoRows = deliveryPlan.Tables[tblCINFO].Rows;
-                CinfoRows[vCinfo][colCINFO_ROUTELENGTH] = routeLength;
+                CinfoRows[vCinfo][colCINFO_ROUTELENGTH] = infos.Distance;
                 CinfoRows[vCinfo][colCINFO_ROUTE] = route;
                 deliveryPlan.AcceptChanges();
 
                 //PlanningForCinfo(dir + "(" + route + ")", vCinfo + 1, deliveryPlan, totalRouteLength + routeLength);
                 WatchPlanningForRoutes.Stop();
-                PlanningForCinfo(dir, vCinfo + 1, deliveryPlan, bgnnOrders, totalRouteLength + routeLength);
+                PlanningForCinfo(dir, vCinfo + 1, deliveryPlan, bgnnOrders, totalRouteLength + infos.Distance);
                 WatchPlanningForRoutes.Start();
             }
             else
@@ -2741,7 +2790,19 @@ namespace orcplan
             }
         }
 
-        private static int GetRouteInfos(int vCinfo, DataSet deliveryPlan, LinkedList<string> listRoute)
+        private class RouteTotalInfos
+        {
+            public RouteTotalInfos()
+            {
+                Distance = 0;
+                Duration = 0;
+            }
+
+            public int Distance { get; set; }
+            public int Duration { get; set; }
+        }
+
+        private static RouteTotalInfos GetRouteInfos(int vCinfo, DataSet deliveryPlan, LinkedList<string> listRoute)
         {
             WatchGetRouteInfos.Start();
             //throw new NotImplementedException();
@@ -2752,7 +2813,8 @@ namespace orcplan
             DataTable RINFO = deliveryPlan.Tables[tblRINFO];
             DataTable CINFO = deliveryPlan.Tables[tblCINFO];
 
-            int len = 0;
+            //int len = 0;
+            RouteTotalInfos infos = new RouteTotalInfos();
 
             string latS, lngS, latD, lngD;
 
@@ -2812,7 +2874,9 @@ namespace orcplan
                 //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
                 //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
-                len += r.Distance;
+                //len += r.Distance;
+                infos.Distance += r.Distance;
+                infos.Duration += r.Duration;
 
                 TOS = TOS.AddSeconds(r.Duration);
                 DataRow dr = OINFO.Rows.Find(OID);// ORDERS.Select($"OID = '{OID}'")[0];
@@ -2845,6 +2909,7 @@ namespace orcplan
                 lngS = lngD;
             }
 
+            if (false)
             {
                 string RID4S = (string)CINFO.Rows[vCinfo][colCINFO_RID4S];
                 DataRow rinfoRow = RINFO.Rows.Find(RID4S);
@@ -2869,7 +2934,7 @@ namespace orcplan
             }
 
             WatchGetRouteInfos.Stop();
-            return len;
+            return infos;// len;
         }
 
         /// <summary>
