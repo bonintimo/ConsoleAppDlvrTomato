@@ -75,7 +75,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
             //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
@@ -1640,35 +1640,37 @@ namespace orcplan
             workTotalDistance = 0;
             workTotalDuration = 0;
 
-            CancellationTokenSource cts = new CancellationTokenSource();
-            ParallelOptions po = new ParallelOptions() { CancellationToken = cts.Token, MaxDegreeOfParallelism = Environment.ProcessorCount };
-            try
+            //CancellationTokenSource cts = new CancellationTokenSource();
+            //ParallelOptions po = new ParallelOptions() { CancellationToken = cts.Token, MaxDegreeOfParallelism = Environment.ProcessorCount };
+            //try
+            //{
+            ParallelLoopResult parResult = System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(),
+                //po,
+                (row, loopState) =>
             {
-                ParallelLoopResult parResult = System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(),
-                    po,
-                    (row, loopState) =>
+                //if (loopState.IsStopped)
+                //{
+                //    return;
+                //}
+                //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
+                BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row, loopState);
+                if (loopState.IsStopped) return;
+
+                lock (deliveryPlan)
                 {
-                    //if (loopState.IsStopped)
-                    //{
-                    //    return;
-                    //}
-                    //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
-                    BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row);
-                    lock (deliveryPlan)
+                    if ((workTotalDistance > bestTotalDistance) || (workTotalDuration > bestTotalDuration))
                     {
-                        if ((workTotalDistance > bestTotalDistance) || (workTotalDuration > bestTotalDuration))
-                        {
-                            //loopState.Stop();
-                            cts.Cancel();
-                        }
+                        loopState.Stop();
+                        //cts.Cancel();
                     }
-                    po.CancellationToken.ThrowIfCancellationRequested();
-                });
-            }
-            catch (OperationCanceledException e)
-            {
-                Console.Write("X");
-            }
+                }
+                //po.CancellationToken.ThrowIfCancellationRequested();
+            });
+            //}
+            //catch (OperationCanceledException e)
+            //{
+            //    Console.Write("X");
+            //}
             //finally { cts.Dispose(); }
             //Task[] cinfoTasks = 
             //deliveryPlan.Tables[tblCINFO].Select().All(row =>//.Select<DataRow, Task>(row =>
@@ -1686,8 +1688,8 @@ namespace orcplan
             //    return;
             //}
 
-            //if (parResult.IsCompleted)
-            if (!cts.IsCancellationRequested)
+            if (parResult.IsCompleted)
+            //if (!cts.IsCancellationRequested)
             {
                 deliveryPlan.AcceptChanges();
 
@@ -1695,7 +1697,11 @@ namespace orcplan
 
                 WriteCurrentDeliveryPlan(dir, deliveryPlan, totalRouteLength);
             }
-            cts.Dispose();
+            else
+            {
+                Console.Write("X");
+            }
+            //cts.Dispose();
         }
 
         private static int CalcTotalRouteLength(DataSet deliveryPlan)
@@ -1737,8 +1743,10 @@ namespace orcplan
         //    public DataRow RinfoRow { get; set; }
         //}
 
-        private static void BuildRouteForCinfoInternal(DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo)
+        private static void BuildRouteForCinfoInternal(DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo, ParallelLoopState pls = null)
         {
+            if (pls.IsStopped) return;
+
             LinkedList<string> routeList = new LinkedList<string>();
 
             //DataRow[] 
@@ -1763,12 +1771,16 @@ namespace orcplan
                 }
             });//.ToArray();
 
+            if (pls.IsStopped) return;
+
             string currRID = String.Empty;
             LinkedListNode<string> ridNode = null;
             LinkedListNode<string> oidNode = null;
 
             foreach (DataRow oInfo in planOrders)
             {
+                if (pls.IsStopped) return;
+
                 lock (oInfo)
                 {
                     if (((OINFO_STATE)oInfo[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING)
@@ -1843,6 +1855,8 @@ namespace orcplan
             {
                 // dis routeList.AddLast(new LinkedListNode<string>($"{currRID}[]"));
             }
+
+            if (pls.IsStopped) return;
 
             routeList = TunningRouteList(cInfo, deliveryPlan, routeList);
 
