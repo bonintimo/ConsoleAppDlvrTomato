@@ -47,8 +47,8 @@ namespace orcplan
     static class MainClass
     {
 
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
@@ -75,7 +75,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
             //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
@@ -836,7 +836,9 @@ namespace orcplan
                 //     return info;
                 // }).ToArray();
 
+                Console.WriteLine($"start the planning with {bgnnOrders.Length} new orders");
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+                Console.WriteLine();
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
                 {
@@ -911,6 +913,8 @@ namespace orcplan
 
             StoreGeoRouteInfo();
             StoreProgressTimings();
+
+            Console.WriteLine();
             return TheBestDeliveryPlan;
         }
 
@@ -1699,7 +1703,7 @@ namespace orcplan
             }
             else
             {
-                Console.Write("X");
+                Console.Write("x");
             }
             //cts.Dispose();
         }
@@ -2280,7 +2284,7 @@ namespace orcplan
             string debugCinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
 
             //Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
-            Console.Write(".");
+            Console.Write("c");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
@@ -2320,7 +2324,7 @@ namespace orcplan
             string debugRinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
 
             //Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
-            Console.Write(".");
+            Console.Write("r");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
@@ -2419,14 +2423,14 @@ namespace orcplan
             }
 
             //Console.WriteLine($"write DP with total length {totalRouteLength}");
-            Console.Write(".");
+            //Console.Write(".");
             //deliveryPlan.WriteXml(xmlFileName);
             //WriteHtmlVersionTheBestDeliveryPlan(deliveryPlan, htmlFileName);
 
-            string fnBUILDT = ((DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
-            string fnBUILDO = deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
-            string fnTOTALENGTH = deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
-            string filenameTBDP = $"CODP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
+            //string fnBUILDT = ((DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
+            //string fnBUILDO = deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
+            //string fnTOTALENGTH = deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
+            //string filenameTBDP = $"CODP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
 
             //deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
@@ -2440,7 +2444,7 @@ namespace orcplan
                 if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
-                    Console.WriteLine($"new TBDP");
+                    //Console.WriteLine($"new TBDP");
                 }
             }
 
@@ -2454,7 +2458,7 @@ namespace orcplan
                 if (CompareTotalDuration(TheFastDeliveryPlan, deliveryPlan))
                 {
                     TheFastDeliveryPlan = deliveryPlan.Copy();
-                    Console.WriteLine($"new TFDP");
+                    //Console.WriteLine($"new TFDP");
                 }
             }
             bestTotalDuration = (int)((TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).TotalSeconds;
@@ -2469,7 +2473,7 @@ namespace orcplan
                 if ((totalRouteLength > 0) && CompareTotalength(TheShortDeliveryPlan, totalRouteLength))// || 
                 {
                     TheShortDeliveryPlan = deliveryPlan.Copy();
-                    Console.WriteLine($"new TSDP");
+                    //Console.WriteLine($"new TSDP");
                 }
             }
             bestTotalDistance = (int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"];
@@ -2484,12 +2488,27 @@ namespace orcplan
             TimeSpan theBestDur = (TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"];
             TimeSpan thePlanDur = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"];
 
-            return thePlanDur < theBestDur;
+            bool r = thePlanDur < theBestDur;
+
+            if (r)
+            {
+                Console.WriteLine($"change TFDP - old DUR {theBestDur}, new DUR {thePlanDur}");
+            }
+
+            return r;
         }
 
         private static bool CompareTotalength(DataSet theBestDeliveryPlan, long totalRouteLength)
         {
-            return totalRouteLength < ((int)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]);
+            int theBestDis = ((int)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]);
+            bool r = totalRouteLength < theBestDis;
+
+            if (r)
+            {
+                Console.WriteLine($"change TSDP - old DIS {theBestDis}, new DIS {totalRouteLength}");
+            }
+
+            return r;
         }
 
         private static bool CompareMedAndDiv(DataSet theBestDeliveryPlan, DataSet deliveryPlan)
@@ -2500,7 +2519,14 @@ namespace orcplan
             TimeSpan planMed = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["MED"];
             TimeSpan planDiv = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"];
 
-            return ((planMed <= theBestMed) && (planDiv < theBestDiv)) || ((planMed < theBestMed) && (planDiv <= theBestDiv));
+            bool r = ((planMed <= theBestMed) && (planDiv < theBestDiv)) || ((planMed < theBestMed) && (planDiv <= theBestDiv));
+
+            if (r)
+            {
+                Console.WriteLine($"change TBDP - old MED {theBestMed} DIV {theBestDiv}, new MED {planMed} DIV {planDiv}");
+            }
+
+            return r;
         }
 
         private static void UpdateMedDiv(DataSet deliveryPlan)
