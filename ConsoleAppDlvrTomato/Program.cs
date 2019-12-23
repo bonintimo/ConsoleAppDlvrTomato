@@ -75,7 +75,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
             //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
@@ -930,8 +930,8 @@ namespace orcplan
 
         private static void UpdateProgressTimings(DataSet theBestDeliveryPlan, Stopwatch timeForPlanning)
         {
-            string sigH = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}";
-            string sigL = $"{GetProgressCountSignature(theBestDeliveryPlan)}";
+            string sigH = $"{GetProgressCountSignature(theBestDeliveryPlan)}";
+            string sigL = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}";
 
             SortedDictionary<string, TimingOfPlans> dictTimings = null;
             TimingOfPlans timings = null;
