@@ -51,7 +51,7 @@ namespace orcplan
         public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
-        public static bool DYNAMIC_PARAMS = false;
+        public static bool DYNAMIC_PARAMS = true;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -827,6 +827,12 @@ namespace orcplan
                 bestTotalDistance = int.MaxValue;
                 bestTotalDuration = int.MaxValue;
 
+                if (DYNAMIC_PARAMS)
+                {
+                    string processSig = GetProgressCountSignature(deliveryPlan);
+                    CorrectProcessParams(processSig);
+                }
+
                 //BldCinfoPlans = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, BuildingCinfoPlan>(row =>
                 // {
                 //     BuildingCinfoPlan info = new BuildingCinfoPlan();
@@ -857,34 +863,34 @@ namespace orcplan
 
             UpdateProgressTimings(TheBestDeliveryPlan, TimeForPlanning);
 
-            if (DYNAMIC_PARAMS)
-            {
-                if (TimeForPlanning.ElapsedMilliseconds > 15000)
-                {
-                    if (MAX_RESTAURANTS_FOR_PLANNING > 1)
-                    {
-                        MAX_RESTAURANTS_FOR_PLANNING -= 1;
-                    }
-                    if (MAX_COURIERS_FOR_PLANNING > 1)
-                    {
-                        MAX_COURIERS_FOR_PLANNING -= 1;
-                    }
-                }
-                else
-                {
-                    if (MAX_COURIERS_FOR_PLANNING < 3)
-                    {
-                        MAX_COURIERS_FOR_PLANNING += 1;
-                    }
-                    else
-                    {
-                        if (MAX_RESTAURANTS_FOR_PLANNING < 2)
-                        {
-                            MAX_RESTAURANTS_FOR_PLANNING += 1;
-                        }
-                    }
-                }
-            }
+            //if (DYNAMIC_PARAMS)
+            //{
+            //    if (TimeForPlanning.ElapsedMilliseconds > 15000)
+            //    {
+            //        if (MAX_RESTAURANTS_FOR_PLANNING > 1)
+            //        {
+            //            MAX_RESTAURANTS_FOR_PLANNING -= 1;
+            //        }
+            //        if (MAX_COURIERS_FOR_PLANNING > 1)
+            //        {
+            //            MAX_COURIERS_FOR_PLANNING -= 1;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (MAX_COURIERS_FOR_PLANNING < 3)
+            //        {
+            //            MAX_COURIERS_FOR_PLANNING += 1;
+            //        }
+            //        else
+            //        {
+            //            if (MAX_RESTAURANTS_FOR_PLANNING < 2)
+            //            {
+            //                MAX_RESTAURANTS_FOR_PLANNING += 1;
+            //            }
+            //        }
+            //    }
+            //}
 
 
             appLog.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
@@ -916,6 +922,28 @@ namespace orcplan
 
             Console.WriteLine();
             return TheBestDeliveryPlan;
+        }
+
+        private static void CorrectProcessParams(string processSig)
+        {
+            SortedDictionary<string, TimingOfPlans> dic = null;
+            TimingOfPlans tmg = null;
+
+            if (ProgressTimings.TryGetValue(processSig, out dic))
+            {
+                CorrectProcessParams(dic);
+            }
+            else
+            {
+                ProgressTimings.Add(processSig, new SortedDictionary<string, TimingOfPlans>());
+                var tmp = ProgressTimings.SkipWhile(kvp => kvp.Key != processSig).Skip(1).First();
+                CorrectProcessParams(tmp.Value);
+            }
+        }
+
+        private static void CorrectProcessParams(SortedDictionary<string, TimingOfPlans> dic)
+        {
+            
         }
 
         private static void StoreProgressTimings()
@@ -970,6 +998,12 @@ namespace orcplan
 
         private static void CalcProgressCount(DataSet plan, out int cntTB, out int cntTC, out int cntTR, out int cntTT, out int cntTP, out int cntTE)
         {
+            if(plan ==null)
+            {
+                cntTB = cntTC = cntTC = cntTR = cntTT = cntTP = cntTE = 0;
+                return;
+            }
+
             cntTB = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.BEGINNING).Count();
             cntTC = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.COOKING).Count();
             cntTR = plan.Tables[tblOINFO].Select().Where(row => (OINFO_STATE)row[colOINFO_STATE] == OINFO_STATE.READY).Count();
