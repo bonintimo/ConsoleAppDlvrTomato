@@ -936,7 +936,7 @@ namespace orcplan
             else
             {
                 ProgressTimings.Add(processSig, new SortedDictionary<string, TimingOfPlans>());
-                var tmp = ProgressTimings.SkipWhile(kvp => kvp.Key != processSig).Skip(1).First();
+                KeyValuePair<string, SortedDictionary<string, TimingOfPlans>> tmp = ProgressTimings.SkipWhile(kvp => kvp.Key != processSig).Skip(1).First();
                 CorrectProcessParams(tmp.Value);
             }
         }
