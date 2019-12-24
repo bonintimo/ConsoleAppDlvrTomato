@@ -47,7 +47,7 @@ namespace orcplan
     static class MainClass
     {
 
-        public static int MAX_RESTAURANTS_FOR_PLANNING = 1;
+        public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
@@ -75,7 +75,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
             //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
@@ -1662,7 +1662,7 @@ namespace orcplan
 
                 lock (deliveryPlan)
                 {
-                    if ((workTotalDistance > bestTotalDistance) || (workTotalDuration > bestTotalDuration))
+                    if ((workTotalDistance > bestTotalDistance) && (workTotalDuration > bestTotalDuration))
                     {
                         loopState.Stop();
                         //cts.Cancel();
@@ -1703,7 +1703,7 @@ namespace orcplan
             }
             else
             {
-                Console.Write("x");
+                Console.Write("X");
             }
             //cts.Dispose();
         }
@@ -2434,10 +2434,11 @@ namespace orcplan
 
             //deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
+            Console.Write("p");
             if (TheBestDeliveryPlan == null)
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"new TBDP");
+                Console.WriteLine($"\nnew TBDP");
             }
             else
             {
@@ -2451,7 +2452,7 @@ namespace orcplan
             if (TheFastDeliveryPlan == null)
             {
                 TheFastDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"new TFDP");
+                Console.WriteLine($"\nnew TFDP");
             }
             else
             {
@@ -2466,7 +2467,7 @@ namespace orcplan
             if (TheShortDeliveryPlan == null)
             {
                 TheShortDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"new TSDP");
+                Console.WriteLine($"\nnew TSDP");
             }
             else
             {
@@ -2492,7 +2493,7 @@ namespace orcplan
 
             if (r)
             {
-                Console.WriteLine($"change TFDP - old DUR {theBestDur}, new DUR {thePlanDur}");
+                Console.WriteLine($"\nchange TFDP - old DUR {theBestDur}, new DUR {thePlanDur}");
             }
 
             return r;
@@ -2505,7 +2506,7 @@ namespace orcplan
 
             if (r)
             {
-                Console.WriteLine($"change TSDP - old DIS {theBestDis}, new DIS {totalRouteLength}");
+                Console.WriteLine($"\nchange TSDP - old DIS {theBestDis}, new DIS {totalRouteLength}");
             }
 
             return r;
@@ -2523,7 +2524,7 @@ namespace orcplan
 
             if (r)
             {
-                Console.WriteLine($"change TBDP - old MED {theBestMed} DIV {theBestDiv}, new MED {planMed} DIV {planDiv}");
+                Console.WriteLine($"\nchange TBDP - old MED {theBestMed} DIV {theBestDiv}, new MED {planMed} DIV {planDiv}");
             }
 
             return r;
