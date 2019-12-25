@@ -842,7 +842,7 @@ namespace orcplan
                 //     return info;
                 // }).ToArray();
 
-                Console.WriteLine($"start the planning with {bgnnOrders.Length} new orders");
+                Console.WriteLine($"start the planning with {bgnnOrders.Length} new orders (max R {MAX_RESTAURANTS_FOR_PLANNING}, max C {MAX_COURIERS_FOR_PLANNING})");
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
                 Console.WriteLine();
 
@@ -936,14 +936,34 @@ namespace orcplan
             else
             {
                 ProgressTimings.Add(processSig, new SortedDictionary<string, TimingOfPlans>());
-                KeyValuePair<string, SortedDictionary<string, TimingOfPlans>> tmp = ProgressTimings.SkipWhile(kvp => kvp.Key != processSig).Skip(1).First();
+                KeyValuePair<string, SortedDictionary<string, TimingOfPlans>> tmp = ProgressTimings.SkipWhile(kvp => kvp.Key != processSig).Take(2).Last();
                 CorrectProcessParams(tmp.Value);
             }
         }
 
         private static void CorrectProcessParams(SortedDictionary<string, TimingOfPlans> dic)
         {
-            
+            if (dic.Count == 0)
+            {
+                MAX_RESTAURANTS_FOR_PLANNING = 2;
+                MAX_COURIERS_FOR_PLANNING = 3;
+            }
+            else
+            {
+                KeyValuePair<string, TimingOfPlans> tgt = dic.Where(kvp => (kvp.Value.MinTime + kvp.Value.MaxTime) / 2 < 15000).LastOrDefault();
+                if (tgt.Equals(default(KeyValuePair<string, TimingOfPlans>)))
+                {
+                    MAX_RESTAURANTS_FOR_PLANNING = 1;
+                    MAX_COURIERS_FOR_PLANNING = 1;
+                }
+                else
+                {
+                    string[] k = tgt.Key.Split("RC".ToCharArray());
+                    MAX_RESTAURANTS_FOR_PLANNING = int.Parse( k[1]);
+                    MAX_COURIERS_FOR_PLANNING = int.Parse(k[2]);
+                }
+            }
+
         }
 
         private static void StoreProgressTimings()
@@ -991,14 +1011,14 @@ namespace orcplan
         private static string GetProgressCountSignature(DataSet plan)
         {
             int cntTB, cntTC, cntTR, cntTT, cntTP, cntTE;
-            CalcProgressCount(TheBestDeliveryPlan, out cntTB, out cntTC, out cntTR, out cntTT, out cntTP, out cntTE);
+            CalcProgressCount(plan, out cntTB, out cntTC, out cntTR, out cntTT, out cntTP, out cntTE);
 
             return $"B{cntTB.ToString("D3")}C{cntTC.ToString("D3")}R{cntTR.ToString("D3")}T{cntTT.ToString("D3")}P{cntTP.ToString("D3")}E{cntTE.ToString("D3")}";
         }
 
         private static void CalcProgressCount(DataSet plan, out int cntTB, out int cntTC, out int cntTR, out int cntTT, out int cntTP, out int cntTE)
         {
-            if(plan ==null)
+            if (plan == null)
             {
                 cntTB = cntTC = cntTC = cntTR = cntTT = cntTP = cntTE = 0;
                 return;
