@@ -193,7 +193,14 @@ namespace orcplan
                 "/actor/{aname}/{atime}/{alat}/{alng}/",
                 (rqweb, rpweb, argsweb) =>
                 {
+                    //default...
                     rpweb.AsText($"Hi, {argsweb["aname"]}! Your {argsweb["atime"]} at {argsweb["alat"]} {argsweb["alng"]} is received {DateTime.Now.ToString()}");
+
+                    // RID
+
+                    // CID
+
+                    // OID
                 });
 
             SimpleHttp.Route.Add(
