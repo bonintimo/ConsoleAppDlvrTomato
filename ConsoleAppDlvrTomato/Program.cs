@@ -193,14 +193,40 @@ namespace orcplan
                 "/actor/{aname}/{atime}/{alat}/{alng}/",
                 (rqweb, rpweb, argsweb) =>
                 {
-                    //default...
-                    rpweb.AsText($"Hi, {argsweb["aname"]}! Your {argsweb["atime"]} at {argsweb["alat"]} {argsweb["alng"]} is received {DateTime.Now.ToString()}");
+                    string aName = WebUtility.UrlDecode(argsweb["aname"]);
 
                     // RID
+                    DataRow drRID = TheWorkDeliveryPlan.Tables[tblRINFO].Rows.Find(aName);
+
+                    if (drRID != null)
+                    {
+                        string json = GetPlanForR(TheWorkDeliveryPlan, drRID);
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
+                        return;
+                    }
 
                     // CID
+                    DataRow drCID = TheWorkDeliveryPlan.Tables[tblCINFO].Rows.Find(aName);
+
+                    if (drCID != null)
+                    {
+                        string json = GetPlanForC(TheWorkDeliveryPlan, drCID);
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
+                        return;
+                    }
 
                     // OID
+                    DataRow drOID = TheWorkDeliveryPlan.Tables[tblOINFO].Rows.Find(aName);
+
+                    if (drOID != null)
+                    {
+                        string json = GetPlanForO(TheWorkDeliveryPlan, drOID);
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
+                        return;
+                    }
+
+                    //default...
+                    rpweb.AsText($"Hi, {argsweb["aname"]}! Your {argsweb["atime"]} at {argsweb["alat"]} {argsweb["alng"]} is received {DateTime.Now.ToString()}");
                 });
 
             SimpleHttp.Route.Add(
@@ -216,13 +242,43 @@ namespace orcplan
                     }
                     else
                     {
-                        rpweb.AsText("<html><body>Welcome to Delivery Planning System</body></html>");
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes("<html><body>Welcome to Delivery Planning System</body></html>"), "text/html");
                     }
                 });
 
             SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
                 new Action<Task>((t) => { Console.WriteLine("HTTP server has been stopped"); })
                 );
+        }
+
+        private static string GetPlanForO(DataSet theWorkDeliveryPlan, DataRow row)
+        {
+            //
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                theWorkDeliveryPlan, 
+                Newtonsoft.Json.Formatting.Indented
+                );
+            return json;
+        }
+
+        private static string GetPlanForC(DataSet theWorkDeliveryPlan, DataRow row)
+        {
+            //
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                theWorkDeliveryPlan,
+                Newtonsoft.Json.Formatting.Indented
+                );
+            return json;
+        }
+
+        private static string GetPlanForR(DataSet theWorkDeliveryPlan, DataRow row)
+        {
+            //
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                theWorkDeliveryPlan,
+                Newtonsoft.Json.Formatting.Indented
+                );
+            return json;
         }
 
         private static void InitBaseDirForDPR()
@@ -966,7 +1022,7 @@ namespace orcplan
                 else
                 {
                     string[] k = tgt.Key.Split("RC".ToCharArray());
-                    MAX_RESTAURANTS_FOR_PLANNING = int.Parse( k[1]);
+                    MAX_RESTAURANTS_FOR_PLANNING = int.Parse(k[1]);
                     MAX_COURIERS_FOR_PLANNING = int.Parse(k[2]);
                 }
             }
