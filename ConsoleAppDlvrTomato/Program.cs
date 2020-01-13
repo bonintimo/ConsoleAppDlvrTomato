@@ -51,7 +51,7 @@ namespace orcplan
         public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
-        public static bool DYNAMIC_PARAMS = true;
+        public static bool DYNAMIC_PARAMS = false;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -75,7 +75,7 @@ namespace orcplan
 
             //Console.WriteLine("Hello World!");
 
-            ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
             //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
             //ReadBgnnOrders(@"");
 
@@ -2556,6 +2556,7 @@ namespace orcplan
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TBDP");
+                WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
             }
             else
             {
@@ -2563,6 +2564,7 @@ namespace orcplan
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
                     //Console.WriteLine($"new TBDP");
+                    WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
                 }
             }
 
@@ -2570,6 +2572,7 @@ namespace orcplan
             {
                 TheFastDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TFDP");
+                WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
             }
             else
             {
@@ -2577,6 +2580,7 @@ namespace orcplan
                 {
                     TheFastDeliveryPlan = deliveryPlan.Copy();
                     //Console.WriteLine($"new TFDP");
+                    WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
                 }
             }
             bestTotalDuration = (int)((TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).TotalSeconds;
@@ -2585,6 +2589,7 @@ namespace orcplan
             {
                 TheShortDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TSDP");
+                WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
             }
             else
             {
@@ -2592,6 +2597,7 @@ namespace orcplan
                 {
                     TheShortDeliveryPlan = deliveryPlan.Copy();
                     //Console.WriteLine($"new TSDP");
+                    WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
                 }
             }
             bestTotalDistance = (int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"];
