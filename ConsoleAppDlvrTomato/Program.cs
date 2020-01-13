@@ -50,7 +50,7 @@ namespace orcplan
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 5;
+        public static int MAX_ORDERS_FOR_COURIERS = 3;
         public static bool DYNAMIC_PARAMS = false;
 
         private static List<Task> taskList = new List<Task>();
@@ -74,10 +74,6 @@ namespace orcplan
             //TspDoTest(args);
 
             //Console.WriteLine("Hello World!");
-
-            ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
-            //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
-            //ReadBgnnOrders(@"");
 
             CreateSchemaForDeliveryPlan(args);
 
@@ -112,6 +108,9 @@ namespace orcplan
                         break;
 
                     case "INIT":
+                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+                        //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
+                        //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
                         deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
