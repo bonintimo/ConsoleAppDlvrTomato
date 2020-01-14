@@ -2337,7 +2337,9 @@ namespace orcplan
             string latD = dataRow["LAT"].ToString();
             string lngD = dataRow["LNG"].ToString();
 
-            var sortRows = rows.OfType<DataRow>().OrderBy<DataRow, DateTime>(row =>
+            Dictionary<DataRow, DateTime> row_time = new Dictionary<DataRow, DateTime>();
+
+            var sortRows = rows.OfType<DataRow>().Where<DataRow>(row =>
             {
                 string latS = row["LAT"].ToString();
                 string lngS = row["LNG"].ToString();
@@ -2393,8 +2395,14 @@ namespace orcplan
                     if (sortDateTime_internal > sortDateTime) sortDateTime = sortDateTime_internal;
                 }
 
-                return sortDateTime; // + duration for available...
-            });
+                row_time.Add(row, sortDateTime);
+
+                return (sortDateTime - buildt) < TimeSpan.FromSeconds(MAX_DURATION_TO_SOURCE_SEC);
+            }).OrderBy<DataRow, DateTime>(row =>
+            {
+
+                return row_time[row];// sortDateTime; // + duration for available...
+            }).ToArray();
 
             //DataRow[] rrr = sortRows.ToArray<DataRow>();
 
@@ -2429,25 +2437,25 @@ namespace orcplan
 
             }).OrderBy<DataRow, DateTime>(row =>
             {
-            //a string latS = row["LAT"].ToString();
-            //a string lngS = row["LNG"].ToString();
+                //a string latS = row["LAT"].ToString();
+                //a string lngS = row["LNG"].ToString();
 
-            //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-            //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-            //a GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-            //JsonValue json = JsonValue.Parse(r);
+                //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
+                //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
+                //a GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
+                //JsonValue json = JsonValue.Parse(r);
 
-            //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
+                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
 
-            //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-            //int lll = int.Parse(json["result"][0]["length"].ToString());
-            //int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-            //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-            //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-            //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
-            //return latD * latD + lngD * lngD;
-            return buildt.AddSeconds(row_dur[row]);// r.Duration); // + duration of cooking...
-            });
+                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
+                //int lll = int.Parse(json["result"][0]["length"].ToString());
+                //int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
+                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
+                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
+                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
+                //return latD * latD + lngD * lngD;
+                return buildt.AddSeconds(row_dur[row]);// r.Duration); // + duration of cooking...
+            }).ToArray();
 
             //DataRow[] rrr = sortRows.ToArray<DataRow>();
 
@@ -2473,7 +2481,7 @@ namespace orcplan
                  double latD = double.Parse(row["LAT"].ToString()) - latS;
                  double lngD = double.Parse(row["LNG"].ToString()) - lngS;
                  return latD * latD + lngD * lngD;
-             });
+             }).ToArray();
 
             //DataRow[] rrr = sortRows.ToArray<DataRow>();
             Console.WriteLine($"{dataRow.Table.TableName}: {sortRows.Count()/*.Length*/}");
