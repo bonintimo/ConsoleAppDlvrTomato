@@ -2409,7 +2409,7 @@ namespace orcplan
             string debugCinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
 
             //Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
-            Console.Write("c");
+            Console.Write($"c{sortRows.Length}");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
@@ -2462,7 +2462,7 @@ namespace orcplan
             string debugRinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
 
             //Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
-            Console.Write("r");
+            Console.Write($"r{sortRows.Length}");
             WatchResortRows.Stop();
             //return sortRows.OfType<DataRow>();
             return sortRows;//.Reverse();
