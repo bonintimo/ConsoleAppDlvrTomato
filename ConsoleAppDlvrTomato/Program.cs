@@ -235,7 +235,7 @@ namespace orcplan
                 {
                     if (TheWorkDeliveryPlan != null)
                     {
-                        StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"15\">");
+                        StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"10\">");
                         //rpweb.AsText(sb.ToString(), "");
                         //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
                         rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
