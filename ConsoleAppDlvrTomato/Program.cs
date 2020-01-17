@@ -200,9 +200,6 @@ namespace orcplan
 
                     if (drRID != null)
                     {
-                        //drRID[colRINFO_LAT] = argsweb["alat"];
-                        //drRID[colRINFO_LNG] = argsweb["alng"];
-
                         string json = GetPlanForR(TheWorkDeliveryPlan, drRID);
                         rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
                         return;
@@ -213,6 +210,13 @@ namespace orcplan
 
                     if (drCID != null)
                     {
+                        double c = Double.NaN;
+                        if (double.TryParse(argsweb["alat"], out c) && Double.TryParse(argsweb["alng"], out c))
+                        {
+                            drCID[colCINFO_LAT] = argsweb["alat"];
+                            drCID[colCINFO_LNG] = argsweb["alng"];
+                        }
+
                         string json = GetPlanForC(TheWorkDeliveryPlan, drCID);
                         rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
                         return;
