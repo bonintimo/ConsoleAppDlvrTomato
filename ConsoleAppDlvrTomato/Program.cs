@@ -200,6 +200,9 @@ namespace orcplan
 
                     if (drRID != null)
                     {
+                        //drRID[colRINFO_LAT] = argsweb["alat"];
+                        //drRID[colRINFO_LNG] = argsweb["alng"];
+
                         string json = GetPlanForR(TheWorkDeliveryPlan, drRID);
                         rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
                         return;
@@ -255,7 +258,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                theWorkDeliveryPlan,
+                row,
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -265,7 +268,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                theWorkDeliveryPlan,
+                row,
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -275,7 +278,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                theWorkDeliveryPlan,
+                row,
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
