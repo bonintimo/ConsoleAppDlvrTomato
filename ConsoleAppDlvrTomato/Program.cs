@@ -48,11 +48,12 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 3;
+        public static int MAX_COURIERS_FOR_PLANNING = 2;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 3;
         public static bool DYNAMIC_PARAMS = false;
         public static int MAX_DURATION_TO_SOURCE_SEC = 30 * 60;
+        public static int MAX_PLANNING_DURATION_MSEC = 15000;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -109,7 +110,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT-2.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -788,6 +789,8 @@ namespace orcplan
 
         private static Stopwatch TimeForPlanning = new Stopwatch();
 
+        private static Stopwatch PlanningDur = new Stopwatch();
+
         private static DataSet PlanningForOrders(DataSet deliveryPlan)
         {
             TheBestDeliveryPlan = null;// deliveryPlan;
@@ -913,7 +916,17 @@ namespace orcplan
                 // }).ToArray();
 
                 Console.WriteLine($"start the planning with {bgnnOrders.Length} new orders (max R {MAX_RESTAURANTS_FOR_PLANNING}, max C {MAX_COURIERS_FOR_PLANNING})");
+                PlanningDur.Restart();
+
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+
+                if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Planning timeout is exceeded");
+                }
+
+                PlanningDur.Reset();
                 Console.WriteLine();
 
                 bgnnOrdersReadyToStart = bgnnOrders.Where<DataRow>(row =>
@@ -1659,6 +1672,8 @@ namespace orcplan
 
         private static void PlanningForCartesian(string dir, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
+            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+
             WatchPlanningForCartesian.Start();
             //throw new NotImplementedException();
 
@@ -2296,6 +2311,8 @@ namespace orcplan
 
         private static void PlanningForCartesianOrderStateCookingReady(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
+            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+
             WatchPlanningForCartesianOrderStateCookingReady.Start();
             foreach (DataRow c in ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
 
@@ -2312,6 +2329,8 @@ namespace orcplan
 
         private static void PlanningForCartesianOrderStateBeginning(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
+            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+
             if (bgnnOrders.Contains(OrdersRows[vOrder]))
             {
                 WatchPlanningForCartesianOrderStateBeginning.Start();
