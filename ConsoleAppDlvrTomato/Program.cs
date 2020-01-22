@@ -48,7 +48,7 @@ namespace orcplan
     {
 
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
-        public static int MAX_COURIERS_FOR_PLANNING = 2;
+        public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 3;
         public static bool DYNAMIC_PARAMS = false;
@@ -110,7 +110,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT-2.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -2602,7 +2602,7 @@ namespace orcplan
             if (TheBestDeliveryPlan == null)
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"\nnew TBDP");
+                Console.WriteLine($"\nnew TBDP MED {(TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} DIV {(TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}");
                 WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
             }
             else
@@ -2618,7 +2618,7 @@ namespace orcplan
             if (TheFastDeliveryPlan == null)
             {
                 TheFastDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"\nnew TFDP");
+                Console.WriteLine($"\nnew TFDP DUR {(TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]}");
                 WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
             }
             else
@@ -2635,7 +2635,7 @@ namespace orcplan
             if (TheShortDeliveryPlan == null)
             {
                 TheShortDeliveryPlan = deliveryPlan.Copy();
-                Console.WriteLine($"\nnew TSDP");
+                Console.WriteLine($"\nnew TSDP DIS {(int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]}");
                 WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
             }
             else
