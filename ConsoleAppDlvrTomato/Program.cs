@@ -920,9 +920,10 @@ namespace orcplan
 
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
+                Console.WriteLine($" PD:{PlanningDur.Elapsed}");
                 if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                     Console.WriteLine("Planning timeout is exceeded");
                 }
 
@@ -1672,7 +1673,7 @@ namespace orcplan
 
         private static void PlanningForCartesian(string dir, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+            if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
             WatchPlanningForCartesian.Start();
             //throw new NotImplementedException();
@@ -2311,7 +2312,7 @@ namespace orcplan
 
         private static void PlanningForCartesianOrderStateCookingReady(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
-            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+            if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
             WatchPlanningForCartesianOrderStateCookingReady.Start();
             foreach (DataRow c in ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
@@ -2329,7 +2330,7 @@ namespace orcplan
 
         private static void PlanningForCartesianOrderStateBeginning(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
-            if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) return;
+            if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
             if (bgnnOrders.Contains(OrdersRows[vOrder]))
             {
