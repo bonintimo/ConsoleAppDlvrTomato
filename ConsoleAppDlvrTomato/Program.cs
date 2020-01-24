@@ -66,6 +66,7 @@ namespace orcplan
 
         public static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Title = $"Delivery Planning System";
             Console.WriteLine($"Delivery Planning System");
             Console.WriteLine($"{Environment.CurrentDirectory}");
@@ -99,6 +100,7 @@ namespace orcplan
             {
 
                 //Console.WriteLine("Write the file name with a delivery plan:");
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine();
                 Console.Write($"{BaseDirectoryForDPR} Type a command:");
                 string filePlan = Console.ReadLine();
@@ -500,7 +502,10 @@ namespace orcplan
             {
                 TimeSpan w = TimeSpan.FromTicks(span.Ticks / 64);
 
+                ConsoleColor concol = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
+                Console.ForegroundColor = concol;
                 Thread.Sleep(w);
             }
 
@@ -802,6 +807,7 @@ namespace orcplan
             DateTime buildt = (DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"];
             TimeOfSimulation = buildt;
 
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"================ DELIVERY PLAN AT {TimeOfSimulation}");
 
             //deliveryPlan.Tables["SUMMARY"].Rows.Clear();
@@ -915,15 +921,21 @@ namespace orcplan
                 //     return info;
                 // }).ToArray();
 
+                ConsoleColor concol = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Magenta;
                 Console.WriteLine($"start the planning with {bgnnOrders.Length} new orders (max R {MAX_RESTAURANTS_FOR_PLANNING}, max C {MAX_COURIERS_FOR_PLANNING})");
+                Console.ForegroundColor = concol;
                 PlanningDur.Restart();
 
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
 
                 if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC)
                 {
+                    concol = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine();
                     Console.WriteLine("Planning timeout is exceeded");
+                    Console.ForegroundColor = concol;
                 }
 
                 PlanningDur.Reset();
