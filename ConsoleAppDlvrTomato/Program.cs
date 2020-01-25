@@ -50,10 +50,10 @@ namespace orcplan
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 3;
+        public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
-        public static int MAX_DURATION_TO_SOURCE_SEC = 30 * 60;
-        public static int MAX_PLANNING_DURATION_MSEC = 15000;
+        public static int MAX_DURATION_TO_SOURCE_SEC = 40 * 60;
+        public static int MAX_PLANNING_DURATION_MSEC = 20000;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
