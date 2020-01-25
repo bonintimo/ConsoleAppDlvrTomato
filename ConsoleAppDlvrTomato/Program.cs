@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -490,6 +490,11 @@ namespace orcplan
             UpdateCourierGeoPosition(nextPlan);
 
             UpdateCourierState(nextPlan);
+
+            ConsoleColor concol = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(stateNext);
+            Console.ForegroundColor = concol;
 
             return stateNext;
         }
