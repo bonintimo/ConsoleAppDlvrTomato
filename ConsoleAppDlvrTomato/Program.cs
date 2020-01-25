@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -460,15 +460,18 @@ namespace orcplan
           });
 
             DataRow firstEvent = planEvents.FirstOrDefault();
+            DateTime dtEvent = DateTime.MinValue;
+
             if (firstEvent != null)
             {
-                DateTime dtEvent = GetDateTimeEvent(firstEvent);
+                dtEvent = GetDateTimeEvent(firstEvent);
 
                 if (dtEvent < TimeOfSimulation) dtEvent = TimeOfSimulation;
 
                 if ((BgnnOrders.Rows.Count > 0) && (dtEvent > (DateTime)BgnnOrders.Rows[0]["TB"]))
                 {
-                    stateNext = InsertBeginningOrderToPlan(nextPlan);
+                    firstEvent = InsertBeginningOrderToPlan(nextPlan);
+                    stateNext = firstEvent != null ? (OINFO_STATE)firstEvent[colOINFO_STATE] : OINFO_STATE.UNDEFINE;
                 }
                 else
                 {
@@ -483,7 +486,12 @@ namespace orcplan
             {
                 if ((BgnnOrders.Rows.Count > 0))
                 {
-                    stateNext = InsertBeginningOrderToPlan(nextPlan);
+                    firstEvent = InsertBeginningOrderToPlan(nextPlan);
+                    if (firstEvent != null)
+                    {
+                        stateNext = (OINFO_STATE)firstEvent[colOINFO_STATE];
+                        dtEvent = (DateTime)firstEvent[colOINFO_TB];
+                    }
                 }
             }
 
@@ -491,10 +499,20 @@ namespace orcplan
 
             UpdateCourierState(nextPlan);
 
-            ConsoleColor concol = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(stateNext);
-            Console.ForegroundColor = concol;
+            if (firstEvent != null)
+            {
+                ConsoleColor concol = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.White;
+                if (firstEvent.RowState != DataRowState.Detached)
+                {
+                    Console.WriteLine($"{stateNext} {firstEvent[colOINFO_OID]} {dtEvent}");
+                }
+                else
+                {
+                    Console.WriteLine($"{firstEvent.RowState}");
+                }
+                Console.ForegroundColor = concol;
+            }
 
             return stateNext;
         }
@@ -609,7 +627,7 @@ namespace orcplan
             nextPlan.AcceptChanges();
         }
 
-        private static OINFO_STATE InsertBeginningOrderToPlan(DataSet nextPlan)
+        private static DataRow InsertBeginningOrderToPlan(DataSet nextPlan)
         {
             DateTime tb = (DateTime)BgnnOrders.Rows[0]["TB"];
             nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = tb;
@@ -623,12 +641,12 @@ namespace orcplan
                 PriorTimeSimulation = tb;
             }
 
-            InsertBgnnOrder(BgnnOrders.Rows[0], nextPlan);
+            DataRow bngRow = InsertBgnnOrder(BgnnOrders.Rows[0], nextPlan);
             BgnnOrders.Rows.RemoveAt(0);
             BgnnOrders.AcceptChanges();
 
             nextPlan.AcceptChanges();
-            return OINFO_STATE.BEGINNING;
+            return bngRow;
         }
 
         private static OINFO_STATE DoNextState(DataRow firstEvent, DataSet nextPlan, DateTime dtEvent)
@@ -711,7 +729,7 @@ namespace orcplan
             return stateNext;
         }
 
-        private static void InsertBgnnOrder(DataRow dataRow, DataSet nextPlan)
+        private static DataRow InsertBgnnOrder(DataRow dataRow, DataSet nextPlan)
         {
             try
             {
@@ -742,10 +760,17 @@ namespace orcplan
                 nextPlan.Tables["SUMMARY"].Rows[0]["BUILDO"] = bgnnOrder[colOINFO_OID].ToString();
 
                 nextPlan.AcceptChanges();
+
+                return bgnnOrder;
             }
             catch
             {
                 //appLog.WriteLine($"no geoinfo about [{dataRow["ADDRESS"].ToString()}]");
+                ConsoleColor concol = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"beginning exception for {dataRow["OID"]} at {dataRow["TB"]}");
+                Console.ForegroundColor = concol;
+                return null;
             }
         }
 
