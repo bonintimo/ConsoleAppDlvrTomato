@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -303,12 +303,13 @@ namespace orcplan
         {
             switch (stateNext)
             {
+                case OINFO_STATE.UNDEFINE:
                 case OINFO_STATE.BEGINNING:
                 //case OINFO_STATE.COOKING:
                 case OINFO_STATE.READY:
                 case OINFO_STATE.TRANSPORTING:
                 case OINFO_STATE.PLACING:
-                    //case OINFO_STATE.ENDED:
+                //case OINFO_STATE.ENDED:
                     return true;
                     break;
             }
