@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -1885,7 +1885,10 @@ namespace orcplan
             }
             else
             {
+                ConsoleColor concol = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write("X");
+                Console.ForegroundColor = concol;
             }
             //cts.Dispose();
         }
@@ -2641,7 +2644,11 @@ namespace orcplan
 
             //deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
+            ConsoleColor concol = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write("p");
+            Console.ForegroundColor = concol;
+
             if (TheBestDeliveryPlan == null)
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
