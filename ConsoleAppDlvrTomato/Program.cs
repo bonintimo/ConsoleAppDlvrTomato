@@ -112,11 +112,11 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-E.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6O3.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -309,7 +309,7 @@ namespace orcplan
                 case OINFO_STATE.READY:
                 case OINFO_STATE.TRANSPORTING:
                 case OINFO_STATE.PLACING:
-                //case OINFO_STATE.ENDED:
+                    //case OINFO_STATE.ENDED:
                     return true;
                     break;
             }
@@ -492,6 +492,30 @@ namespace orcplan
                     {
                         stateNext = (OINFO_STATE)firstEvent[colOINFO_STATE];
                         dtEvent = (DateTime)firstEvent[colOINFO_TB];
+                    }
+                }
+                else
+                {
+                    if (nextPlan.Tables[tblOINFO].Rows.Count > 0)
+                    {
+                        var waitingOrds = nextPlan.Tables[tblOINFO].Select().Where<DataRow>(row =>
+                        {
+                            return ((((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && (((TimeSpan)row[colOINFO_TD]) < TimeSpan.FromTicks(0)));
+                        }).OrderByDescending<DataRow, TimeSpan>(row =>
+                        {
+                            return ((TimeSpan)row[colOINFO_TD]);
+                        });
+
+                        DataRow nearOrd = waitingOrds.FirstOrDefault();
+                        if (nearOrd != null)
+                        {
+                            TimeSpan TD = -((TimeSpan)nearOrd[colOINFO_TD]);
+
+                            dtEvent = TimeOfSimulation + (TimeSpan.FromTicks(((long)TD.Ticks / 2)));
+                            WaitSimulationFor(dtEvent);
+                            nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = dtEvent;
+                            nextPlan.AcceptChanges();
+                        }
                     }
                 }
             }
@@ -799,6 +823,7 @@ namespace orcplan
 
             DateTime buildt = (DateTime)set.Tables["SUMMARY"].Rows[0]["BUILDT"];
             TimeOfSimulation = buildt;
+            PriorTimeSimulation = buildt;
             return set;
         }
 
@@ -839,7 +864,7 @@ namespace orcplan
             TimeOfSimulation = buildt;
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"================ DELIVERY PLAN AT {TimeOfSimulation}");
+            Console.WriteLine($"DELIVERY PLAN AT {TimeOfSimulation}");
 
             //deliveryPlan.Tables["SUMMARY"].Rows.Clear();
             //DataRow row = deliveryPlan.Tables["SUMMARY"].NewRow();
