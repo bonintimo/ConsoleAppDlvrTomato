@@ -634,7 +634,11 @@ namespace orcplan
                     //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
                     //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
-                    if (r.Duration == 0) return true;
+                    if (r.Duration == 0)
+                    {
+                        rowCinfo[colCINFO_TOS] = buildt;
+                        return true;
+                    }
 
                     TOS = TOS.AddSeconds(r.Duration);
                 }
