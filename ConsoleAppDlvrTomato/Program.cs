@@ -3171,7 +3171,7 @@ namespace orcplan
                 {
                     if (dst.Length > 1)
                     {
-                        DateTime TR = (DateTime)dr["TR"];
+                        DateTime TR = (DateTime)dr[colOINFO_TR];
 
                         if (TR > TOS) TOS = TR;
 
