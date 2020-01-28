@@ -112,11 +112,11 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-E.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6O3.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -827,7 +827,7 @@ namespace orcplan
 
             DateTime buildt = (DateTime)set.Tables["SUMMARY"].Rows[0]["BUILDT"];
             TimeOfSimulation = buildt;
-            PriorTimeSimulation = buildt;
+            //PriorTimeSimulation = buildt;
             return set;
         }
 
