@@ -112,7 +112,7 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -265,7 +265,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                row,
+                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -275,7 +275,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                row,
+                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -285,7 +285,7 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                row,
+                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -987,7 +987,9 @@ namespace orcplan
                 Console.ForegroundColor = concol;
                 PlanningDur.Restart();
 
+                deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "OSTATE DESC";
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+                deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "";
 
                 Console.WriteLine($" PD:{PlanningDur.Elapsed}");
                 if (PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC)
@@ -2391,7 +2393,6 @@ namespace orcplan
 
             WatchPlanningForCartesianOrderStateCookingReady.Start();
             foreach (DataRow c in ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
-
             {
                 OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
                 deliveryPlan.Tables[tblOINFO].AcceptChanges();
