@@ -112,11 +112,11 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -216,8 +216,8 @@ namespace orcplan
                         double c = Double.NaN;
                         if (double.TryParse(argsweb["alat"], out c) && Double.TryParse(argsweb["alng"], out c))
                         {
-                            drCID[colCINFO_LAT] = argsweb["alat"];
-                            drCID[colCINFO_LNG] = argsweb["alng"];
+                            //drCID[colCINFO_LAT] = argsweb["alat"];
+                            //drCID[colCINFO_LNG] = argsweb["alng"];
                         }
 
                         string json = GetPlanForC(TheWorkDeliveryPlan, drCID);
@@ -275,20 +275,30 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState },
+                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState, Orders = RetrieveOrdersByCID(theWorkDeliveryPlan, row) },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
+        }
+
+        private static object RetrieveOrdersByCID(DataSet theWorkDeliveryPlan, DataRow row)
+        {
+            return theWorkDeliveryPlan.Tables[tblOINFO].Select($"CID = '{row[colCINFO_CID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(r => { return r.ItemArray; });
         }
 
         private static string GetPlanForR(DataSet theWorkDeliveryPlan, DataRow row)
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState },
+                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState, Orders = RetrieveOrdersByRID(theWorkDeliveryPlan, row) },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
+        }
+
+        private static object RetrieveOrdersByRID(DataSet theWorkDeliveryPlan, DataRow row)
+        {
+            return theWorkDeliveryPlan.Tables[tblOINFO].Select($"RID = '{row[colRINFO_RID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(r => { return r.ItemArray; });
         }
 
         private static void InitBaseDirForDPR()
@@ -989,6 +999,7 @@ namespace orcplan
 
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "OSTATE DESC";
                 PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+                //PlanningForProbability(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "";
 
                 Console.WriteLine($" PD:{PlanningDur.Elapsed}");
@@ -1080,6 +1091,11 @@ namespace orcplan
 
             Console.WriteLine();
             return TheBestDeliveryPlan;
+        }
+
+        private static void PlanningForProbability(string v1, int v2, DataSet deliveryPlan, DataRow[] bgnnOrders)
+        {
+
         }
 
         private static void CorrectProcessParams(string processSig)
@@ -2730,7 +2746,7 @@ namespace orcplan
             }
             bestTotalDistance = (int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"];
 
-            TheWorkDeliveryPlan = TheBestDeliveryPlan;
+            TheWorkDeliveryPlan = TheBestDeliveryPlan.Copy();
 
             WatchWriteCurrentDeliveryPlan.Stop();
         }
