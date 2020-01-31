@@ -998,7 +998,8 @@ namespace orcplan
                 PlanningDur.Restart();
 
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "OSTATE DESC";
-                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+                ClearRouteInformation(deliveryPlan);
+                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 1, 0, deliveryPlan, bgnnOrders);
                 //PlanningForProbability(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "";
 
@@ -1770,14 +1771,14 @@ namespace orcplan
             return initPlan;
         }
 
-        private static void PlanningForCartesian(string dir, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
+        private static void PlanningForCartesian(string dir, int passLevel, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
             if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
             WatchPlanningForCartesian.Start();
             //throw new NotImplementedException();
 
-            ClearRouteInformation(deliveryPlan);
+            //ClearRouteInformation(deliveryPlan);
 
             DataRowCollection OrdersRows = deliveryPlan.Tables[tblOINFO].Rows;
 
@@ -1796,7 +1797,14 @@ namespace orcplan
                 //PlanningForCinfo(dir, 0, deliveryPlan, bgnnOrders, 0);
                 //Console.WriteLine(dir);
 
-                PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
+                if (passLevel > 1)
+                {
+                    PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
+                }
+                else
+                {
+                    PlanningForCartesian(dir, passLevel + 1, 0, deliveryPlan, bgnnOrders);
+                }
                 // });
                 //task.Start();
                 //taskList.Add(task);
@@ -1807,7 +1815,7 @@ namespace orcplan
                 {
                     case OINFO_STATE.BEGINNING:
                         WatchPlanningForCartesian.Stop();
-                        PlanningForCartesianOrderStateBeginning(dir, vOrder, deliveryPlan, OrdersRows, bgnnOrders);
+                        PlanningForCartesianOrderStateBeginning(dir, passLevel, vOrder, deliveryPlan, OrdersRows, bgnnOrders);
                         WatchPlanningForCartesian.Start();
                         break;
 
@@ -1815,7 +1823,7 @@ namespace orcplan
                     case OINFO_STATE.READY:
                         WatchPlanningForCartesian.Stop();
                         //foreach (DataRow c in ResortRows(deliveryPlan.Tables[tblRINFO].Select($"RID = '{OrdersRows[vOrder][colORDERS_RID].ToString()}'")[0], deliveryPlan.Tables[tblCINFO].Rows).Take(3))
-                        PlanningForCartesianOrderStateCookingReady(dir, vOrder, deliveryPlan, OrdersRows, bgnnOrders);
+                        PlanningForCartesianOrderStateCookingReady(dir, passLevel, vOrder, deliveryPlan, OrdersRows, bgnnOrders);
                         WatchPlanningForCartesian.Start();
                         break;
 
@@ -1823,7 +1831,7 @@ namespace orcplan
                     case OINFO_STATE.PLACING:
                     case OINFO_STATE.ENDED:
                         WatchPlanningForCartesian.Stop();
-                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + OrdersRows[vOrder][colOINFO_CID].ToString() + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + OrdersRows[vOrder][colOINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
                         //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                         WatchPlanningForCartesian.Start();
                         break;
@@ -2412,24 +2420,37 @@ namespace orcplan
             deliveryPlan.AcceptChanges();
         }
 
-        private static void PlanningForCartesianOrderStateCookingReady(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
+        private static void PlanningForCartesianOrderStateCookingReady(string dir, int passLevel, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
             if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
-            WatchPlanningForCartesianOrderStateCookingReady.Start();
-            foreach (DataRow c in ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
+            switch (passLevel)
             {
-                OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
-                deliveryPlan.Tables[tblOINFO].AcceptChanges();
+                case 1:
+                    {
+                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
+                    }
+                    break;
 
-                WatchPlanningForCartesianOrderStateCookingReady.Stop();
-                PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", vOrder + 1, deliveryPlan, bgnnOrders);
-                //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
-                WatchPlanningForCartesianOrderStateCookingReady.Start();
+                case 2:
+                    WatchPlanningForCartesianOrderStateCookingReady.Start();
+                    foreach (DataRow c in ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
+                    {
+                        OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
+                        deliveryPlan.Tables[tblOINFO].AcceptChanges();
+
+                        WatchPlanningForCartesianOrderStateCookingReady.Stop();
+                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
+                        //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                        WatchPlanningForCartesianOrderStateCookingReady.Start();
+                    }
+                    break;
+
+                default: break;
             }
         }
 
-        private static void PlanningForCartesianOrderStateBeginning(string dir, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
+        private static void PlanningForCartesianOrderStateBeginning(string dir, int passlevel, int vOrder, DataSet deliveryPlan, DataRowCollection OrdersRows, DataRow[] bgnnOrders)
         {
             if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
@@ -2445,7 +2466,7 @@ namespace orcplan
                         deliveryPlan.Tables[tblOINFO].AcceptChanges();
 
                         WatchPlanningForCartesianOrderStateBeginning.Stop();
-                        PlanningForCartesian(dir + "(" + r[colRINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                        PlanningForCartesian(dir + "(" + r[colRINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
                         //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                         WatchPlanningForCartesianOrderStateBeginning.Start();
                     }
@@ -2454,7 +2475,7 @@ namespace orcplan
             else
             {
                 //PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colORDERS_RID].ToString() + "-" + OrdersRows[vOrder][colORDERS_CID].ToString() + ")", vOrder + 1, deliveryPlan, bgnnOrders);
-                PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                PlanningForCartesian(dir + "(" + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
             }
         }
 
