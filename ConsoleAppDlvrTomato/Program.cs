@@ -116,7 +116,7 @@ namespace orcplan
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -1095,6 +1095,15 @@ namespace orcplan
 
         private static void PlanningForProbability(string v1, int v2, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
+            var ordersForPlanningRID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
+            {
+                return ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING;
+            });
+
+            var ordersForPlanningCID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
+            {
+                return new[] { OINFO_STATE.BEGINNING, OINFO_STATE.COOKING, OINFO_STATE.READY }.Contains((OINFO_STATE)row[colOINFO_STATE]);
+            });
 
         }
 
