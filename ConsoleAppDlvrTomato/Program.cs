@@ -1235,7 +1235,7 @@ namespace orcplan
             {
                 string dirOID = Path.Combine(dir, ord[colOINFO_OID].ToString());
                 Directory.CreateDirectory(dirOID);
-                PlanningForCartesian(dirOID + Path.DirectorySeparatorChar, 0, deliveryPlan, new DataRow[] { ord });
+                PlanningForCartesian(dirOID + Path.DirectorySeparatorChar, 1, 0, deliveryPlan, new DataRow[] { ord });
             }
         }
 
@@ -2428,7 +2428,7 @@ namespace orcplan
             {
                 case 1:
                     {
-                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
+                        PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() /*+ "-" + c[colCINFO_CID].ToString()*/ + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
                     }
                     break;
 
@@ -2457,19 +2457,44 @@ namespace orcplan
             if (bgnnOrders.Contains(OrdersRows[vOrder]))
             {
                 WatchPlanningForCartesianOrderStateBeginning.Start();
-                foreach (DataRow r in ResortRowsRinfo(deliveryPlan, OrdersRows[vOrder], deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING))
-                {
-                    foreach (DataRow c in ResortRowsCinfo(deliveryPlan, r, deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
-                    {
-                        OrdersRows[vOrder][colOINFO_RID] = r[colRINFO_RID];
-                        OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
-                        deliveryPlan.Tables[tblOINFO].AcceptChanges();
 
-                        WatchPlanningForCartesianOrderStateBeginning.Stop();
-                        PlanningForCartesian(dir + "(" + r[colRINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
-                        //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
-                        WatchPlanningForCartesianOrderStateBeginning.Start();
-                    }
+                switch (passlevel)
+                {
+                    case 1:
+                        foreach (DataRow r in ResortRowsRinfo(deliveryPlan, OrdersRows[vOrder], deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING))
+                        {
+                            //foreach (DataRow c in ResortRowsCinfo(deliveryPlan, r, deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
+                            {
+                                OrdersRows[vOrder][colOINFO_RID] = r[colRINFO_RID];
+                                //OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
+                                deliveryPlan.Tables[tblOINFO].AcceptChanges();
+
+                                WatchPlanningForCartesianOrderStateBeginning.Stop();
+                                PlanningForCartesian(dir + "(" + r[colRINFO_RID].ToString() /*+ "-" + c[colCINFO_CID].ToString()*/ + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
+                                //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                                WatchPlanningForCartesianOrderStateBeginning.Start();
+                            }
+                        }
+                        break;
+
+                    case 2:
+                        //foreach (DataRow r in ResortRowsRinfo(deliveryPlan, OrdersRows[vOrder], deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING))
+                        {
+                            foreach (DataRow c in ResortRowsCinfo(deliveryPlan, /*r*/deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
+                            {
+                                //OrdersRows[vOrder][colOINFO_RID] = r[colRINFO_RID];
+                                OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
+                                deliveryPlan.Tables[tblOINFO].AcceptChanges();
+
+                                WatchPlanningForCartesianOrderStateBeginning.Stop();
+                                PlanningForCartesian(dir + "(" /*+ r[colRINFO_RID].ToString()*/ + "-" + c[colCINFO_CID].ToString() + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
+                                //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
+                                WatchPlanningForCartesianOrderStateBeginning.Start();
+                            }
+                        }
+                        break;
+
+                    default: break;
                 }
             }
             else
