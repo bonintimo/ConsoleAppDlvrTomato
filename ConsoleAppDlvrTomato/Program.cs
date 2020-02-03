@@ -999,8 +999,8 @@ namespace orcplan
 
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "OSTATE DESC";
                 ClearRouteInformation(deliveryPlan);
-                PlanningForCartesian(dir + Path.DirectorySeparatorChar, 1, 0, deliveryPlan, bgnnOrders);
-                //PlanningForProbability(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
+                //PlanningForCartesian(dir + Path.DirectorySeparatorChar, 1, 0, deliveryPlan, bgnnOrders);
+                PlanningForProbability(dir + Path.DirectorySeparatorChar, 0, deliveryPlan, bgnnOrders);
                 deliveryPlan.Tables[tblOINFO].DefaultView.Sort = "";
 
                 Console.WriteLine($" PD:{PlanningDur.Elapsed}");
@@ -1094,19 +1094,11 @@ namespace orcplan
             return TheBestDeliveryPlan;
         }
 
-        private static void PlanningForProbability(string v1, int v2, DataSet deliveryPlan, DataRow[] bgnnOrders)
+        private static void PlanningForProbability(string dir, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
             var ordersForPlanningRID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
             {
                 return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && bgnnOrders.Contains(row);
-            });
-
-            Dictionary<DataRow, IEnumerable<DataRow>> dictOrdRID = new Dictionary<DataRow, IEnumerable<DataRow>>();
-
-            ordersForPlanningRID.All(row =>
-            {
-                dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows));
-                return true;
             });
 
             var ordersForPlanningCID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
@@ -1114,6 +1106,29 @@ namespace orcplan
                 return new[] { OINFO_STATE.BEGINNING, OINFO_STATE.COOKING, OINFO_STATE.READY }.Contains((OINFO_STATE)row[colOINFO_STATE]);
             });
 
+            Dictionary<DataRow, DataRow[]> dictOrdRID = new Dictionary<DataRow, DataRow[]>();
+
+            ordersForPlanningRID.All(row =>
+            {
+                dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows).ToArray());
+                row[colOINFO_RID] = dictOrdRID[row][0][colRINFO_RID];
+                return true;
+            });
+
+            deliveryPlan.AcceptChanges();
+
+            Dictionary<DataRow, DataRow[]> dictOrdCID = new Dictionary<DataRow, DataRow[]>();
+
+            ordersForPlanningCID.All(row =>
+            {
+                dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).ToArray());
+                row[colOINFO_CID] = dictOrdCID[row][0][colCINFO_CID];
+                return true;
+            });
+
+            deliveryPlan.AcceptChanges();
+
+            PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
 
         }
 
