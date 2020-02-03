@@ -52,7 +52,7 @@ namespace orcplan
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
-        public static int MAX_DURATION_TO_SOURCE_SEC = 40 * 60;
+        public static int MAX_DURATION_TO_SOURCE_SEC = 50 * 60;
         public static int MAX_PLANNING_DURATION_MSEC = 20000;
 
         private static List<Task> taskList = new List<Task>();
@@ -1098,13 +1098,22 @@ namespace orcplan
         {
             var ordersForPlanningRID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
             {
-                return ((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING;
+                return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && bgnnOrders.Contains(row);
+            });
+
+            Dictionary<DataRow, IEnumerable<DataRow>> dictOrdRID = new Dictionary<DataRow, IEnumerable<DataRow>>();
+
+            ordersForPlanningRID.All(row =>
+            {
+                dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows));
+                return true;
             });
 
             var ordersForPlanningCID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
             {
                 return new[] { OINFO_STATE.BEGINNING, OINFO_STATE.COOKING, OINFO_STATE.READY }.Contains((OINFO_STATE)row[colOINFO_STATE]);
             });
+
 
         }
 
