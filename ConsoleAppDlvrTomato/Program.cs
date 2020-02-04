@@ -112,11 +112,11 @@ namespace orcplan
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -1096,6 +1096,20 @@ namespace orcplan
 
         private static void PlanningForProbability(string dir, int vOrder, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
+            // ...
+            Dictionary<int, int[]> lenRnd = new Dictionary<int, int[]>();
+            foreach (int idx in Enumerable.Range(1, Math.Max(MAX_RESTAURANTS_FOR_PLANNING, MAX_COURIERS_FOR_PLANNING)))
+            {
+                List<int> listInt = new List<int>();
+
+                for (int i = 0; i < idx; i++)
+                {
+                    listInt.AddRange(Enumerable.Repeat<int>(i, idx - i));
+                }
+
+                lenRnd.Add(idx, listInt.ToArray());
+            }
+
             var ordersForPlanningRID = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where(row =>
             {
                 return (((OINFO_STATE)row[colOINFO_STATE]) == OINFO_STATE.BEGINNING) && bgnnOrders.Contains(row);
@@ -1106,29 +1120,76 @@ namespace orcplan
                 return new[] { OINFO_STATE.BEGINNING, OINFO_STATE.COOKING, OINFO_STATE.READY }.Contains((OINFO_STATE)row[colOINFO_STATE]);
             });
 
+            long countRIDs = 1;
             Dictionary<DataRow, DataRow[]> dictOrdRID = new Dictionary<DataRow, DataRow[]>();
 
             ordersForPlanningRID.All(row =>
             {
-                dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows).ToArray());
+                dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING).ToArray());
                 row[colOINFO_RID] = dictOrdRID[row][0][colRINFO_RID];
+                countRIDs *= dictOrdRID[row].Length / 2 + 1;
                 return true;
             });
 
             deliveryPlan.AcceptChanges();
 
+            long countCIDs = 1;
             Dictionary<DataRow, DataRow[]> dictOrdCID = new Dictionary<DataRow, DataRow[]>();
 
             ordersForPlanningCID.All(row =>
             {
-                dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).ToArray());
+                dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING).ToArray());
                 row[colOINFO_CID] = dictOrdCID[row][0][colCINFO_CID];
+                countCIDs *= dictOrdCID[row].Length / 2 + 1;
                 return true;
             });
 
             deliveryPlan.AcceptChanges();
 
             PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
+
+            Random rnd = new Random();
+            while (countRIDs > 0)
+            {
+                if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
+
+                ordersForPlanningRID.All(row =>
+                {
+                    row[colOINFO_RID] = dictOrdRID[row][lenRnd[dictOrdRID[row].Length][rnd.Next(lenRnd[dictOrdRID[row].Length].Length)]][colRINFO_RID];
+                    return true;
+                });
+
+                deliveryPlan.AcceptChanges();
+
+                countCIDs = 1;
+                dictOrdCID = new Dictionary<DataRow, DataRow[]>();
+                ordersForPlanningCID.All(row =>
+                {
+                    dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING).ToArray());
+                    countCIDs *= dictOrdCID[row].Length / 2 + 1;
+                    return true;
+                });
+
+                //if (countRIDs * 2 < countCIDs) countCIDs /= countRIDs;
+                while (countCIDs > 0)
+                {
+                    if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
+
+                    ordersForPlanningCID.All(row =>
+                    {
+                        row[colOINFO_CID] = dictOrdCID[row][lenRnd[dictOrdCID[row].Length][rnd.Next(lenRnd[dictOrdCID[row].Length].Length)]][colCINFO_CID];
+                        return true;
+                    });
+
+                    deliveryPlan.AcceptChanges();
+
+                    PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
+
+                    countCIDs--;
+                }
+
+                countRIDs--;
+            }
 
         }
 
