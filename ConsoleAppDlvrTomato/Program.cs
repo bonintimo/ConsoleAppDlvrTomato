@@ -68,7 +68,7 @@ namespace orcplan
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Title = $"Delivery Planning System";
-            Console.WriteLine($"Delivery Planning System");
+            Console.WriteLine($"Delivery Planning System (type [h]elp for viewing available commands))");
             Console.WriteLine($"{Environment.CurrentDirectory}");
             Console.WriteLine($"PC:{Environment.ProcessorCount} CLR:{Environment.Version} WS:{Environment.WorkingSet}");
             Console.WriteLine();
@@ -107,21 +107,33 @@ namespace orcplan
 
                 switch (filePlan.ToUpper())
                 {
+                    case "HELP":
+                    case "H":
+                        Console.WriteLine("Commands:");
+                        Console.WriteLine("[e]xit - leaving the programm");
+                        Console.WriteLine("[i]nit - loading predefined information");
+                        Console.WriteLine("[n]ext - performing one step of planning");
+                        Console.WriteLine("[r]un  - starting the process of planning");
+                        break;
+
                     case "EXIT":
+                    case "E":
                         isContinue = false;
                         break;
 
                     case "INIT":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
+                    case "I":
+                        ReadBgnnOrders(@"./ORDERS-2018-10-18-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
 
                     case "NEXT":
+                    case "N":
                         stateNext = ApplyNextEvent(nextPlan);
                         deliveryPlan = nextPlan;
                         if (IsNeedPlanning(stateNext))
@@ -129,6 +141,7 @@ namespace orcplan
                         break;
 
                     case "RUN":
+                    case "R":
                         while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.Rows.Count > 0)) && !Console.KeyAvailable)
                         {
                             stateNext = ApplyNextEvent(nextPlan);
@@ -193,7 +206,7 @@ namespace orcplan
             //    });
 
             SimpleHttp.Route.Add(
-                "/actor/{aname}/{atime}/{alat}/{alng}/",
+                "/info/{aname}/{atime}/{alat}/{alng}/",
                 (rqweb, rpweb, argsweb) =>
                 {
                     string aName = WebUtility.UrlDecode(argsweb["aname"]);
@@ -240,21 +253,27 @@ namespace orcplan
                 });
 
             SimpleHttp.Route.Add(
-                "/",
+                "/exec/{aname}/{atime}/{alat}/{alng}/{acmd}",
                 (rqweb, rpweb, argsweb) =>
                 {
-                    if (TheWorkDeliveryPlan != null)
-                    {
-                        StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"10\">");
-                        //rpweb.AsText(sb.ToString(), "");
-                        //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
-                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
-                    }
-                    else
-                    {
-                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes("<html><body>Welcome to Delivery Planning System</body></html>"), "text/html");
-                    }
                 });
+
+            SimpleHttp.Route.Add(
+        "/",
+        (rqweb, rpweb, argsweb) =>
+        {
+            if (TheWorkDeliveryPlan != null)
+            {
+                StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"10\">");
+                //rpweb.AsText(sb.ToString(), "");
+                //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
+                rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
+            }
+            else
+            {
+                rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes("<html><body>Welcome to Delivery Planning System</body></html>"), "text/html");
+            }
+        });
 
             SimpleHttp.HttpServer.ListenAsync(8787, CancellationToken.None, SimpleHttp.Route.OnHttpRequestAsync).ContinueWith(
                 new Action<Task>((t) => { Console.WriteLine("HTTP server has been stopped"); })
