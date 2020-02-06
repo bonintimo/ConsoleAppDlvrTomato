@@ -577,7 +577,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 64);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 4);
 
                 ConsoleColor concol = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -1146,7 +1146,7 @@ namespace orcplan
             {
                 dictOrdRID.Add(row, ResortRowsRinfo(deliveryPlan, row, deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING).ToArray());
                 row[colOINFO_RID] = dictOrdRID[row][0][colRINFO_RID];
-                countRIDs *= dictOrdRID[row].Length / 2 + 1;
+                countRIDs *= dictOrdRID[row].Length;// / 2 + 1;
                 return true;
             });
 
@@ -1159,7 +1159,7 @@ namespace orcplan
             {
                 dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING).ToArray());
                 row[colOINFO_CID] = dictOrdCID[row][0][colCINFO_CID];
-                countCIDs *= dictOrdCID[row].Length / 2 + 1;
+                countCIDs *= dictOrdCID[row].Length;// / 2 + 1;
                 return true;
             });
 
@@ -1168,6 +1168,9 @@ namespace orcplan
             PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
 
             Random rnd = new Random();
+            Console.Write($"R{countRIDs}");
+            countRIDs /= 2;
+            countRIDs++;// if countRIDs == 0
             while (countRIDs > 0)
             {
                 if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
@@ -1185,11 +1188,14 @@ namespace orcplan
                 ordersForPlanningCID.All(row =>
                 {
                     dictOrdCID.Add(row, ResortRowsCinfo(deliveryPlan, deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING).ToArray());
-                    countCIDs *= dictOrdCID[row].Length / 2 + 1;
+                    countCIDs *= dictOrdCID[row].Length;// / 2 + 1;
                     return true;
                 });
 
                 //if (countRIDs * 2 < countCIDs) countCIDs /= countRIDs;
+                Console.Write($"C{countCIDs}");
+                countCIDs /= 2;
+                countCIDs++;
                 while (countCIDs > 0)
                 {
                     if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
