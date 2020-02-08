@@ -123,7 +123,7 @@ namespace orcplan
 
                     case "INIT":
                     case "I":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18-D.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
@@ -577,7 +577,7 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 4);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 64);
 
                 ConsoleColor concol = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -1169,9 +1169,15 @@ namespace orcplan
 
             Random rnd = new Random();
             Console.Write($"R{countRIDs}");
-            countRIDs /= 2;
-            countRIDs++;// if countRIDs == 0
-            while (countRIDs > 0)
+            Console.Write($"C{countCIDs}");
+
+            int cntRepeat = (int)Math.Sqrt(countRIDs * countCIDs);
+            int loopRIDs = cntRepeat > countRIDs ? (int)countRIDs : cntRepeat;
+            int loopCIDs = cntRepeat > countCIDs ? (int)countCIDs : cntRepeat;
+            //countRIDs /= 2;
+            //countRIDs++;// if countRIDs == 0
+            //while (countRIDs > 0)
+            foreach (int forRIDs in Enumerable.Range(1, loopRIDs))
             {
                 if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
 
@@ -1194,9 +1200,10 @@ namespace orcplan
 
                 //if (countRIDs * 2 < countCIDs) countCIDs /= countRIDs;
                 Console.Write($"C{countCIDs}");
-                countCIDs /= 2;
-                countCIDs++;
-                while (countCIDs > 0)
+                //countCIDs /= 2;
+                //countCIDs++;
+                //while (countCIDs > 0)
+                foreach (int forCIDs in Enumerable.Range(1, loopCIDs))
                 {
                     if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
 
@@ -1210,10 +1217,10 @@ namespace orcplan
 
                     PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
 
-                    countCIDs--;
+                    //countCIDs--;
                 }
 
-                countRIDs--;
+                //countRIDs--;
             }
 
         }
