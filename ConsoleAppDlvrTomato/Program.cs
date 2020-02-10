@@ -256,6 +256,25 @@ namespace orcplan
                 "/exec/{aname}/{atime}/{alat}/{alng}/{acmd}",
                 (rqweb, rpweb, argsweb) =>
                 {
+                    lock (BgnnOrders)
+                    {
+                        DataRow row = BgnnOrders.NewRow();
+
+                        row["OID"] = argsweb["aname"];
+                        row["ADDRESS"] = $"{argsweb["alng"]},{argsweb["alat"]}";
+                        row["TB"] = TimeOfSimulation;
+                        row["DURATION"] = TimeSpan.FromMinutes(10.0);
+                        row["TOT"] = row["TB"];
+
+                        BgnnOrders.Rows.Add(row);
+                        BgnnOrders.AcceptChanges();
+
+                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                            row,
+                            Newtonsoft.Json.Formatting.Indented
+                            );
+                        rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes($"{json}"), "text/html");
+                    }
                 });
 
             SimpleHttp.Route.Add(
@@ -700,8 +719,12 @@ namespace orcplan
             }
 
             DataRow bngRow = InsertBgnnOrder(BgnnOrders.Rows[0], nextPlan);
-            BgnnOrders.Rows.RemoveAt(0);
-            BgnnOrders.AcceptChanges();
+
+            lock (BgnnOrders)
+            {
+                BgnnOrders.Rows.RemoveAt(0);
+                BgnnOrders.AcceptChanges();
+            }
 
             nextPlan.AcceptChanges();
             return bngRow;
