@@ -142,7 +142,7 @@ namespace orcplan
 
                     case "RUN":
                     case "R":
-                        while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.Rows.Count > 0)) && !Console.KeyAvailable)
+                        while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.DefaultView.Count > 0)) && !Console.KeyAvailable)
                         {
                             stateNext = ApplyNextEvent(nextPlan);
                             deliveryPlan = nextPlan;
@@ -258,6 +258,11 @@ namespace orcplan
                 {
                     lock (BgnnOrders)
                     {
+                        DataRow[] tbl = BgnnOrders.Select().Where(r =>
+                        {
+                            return ((DateTime)r["TB"]) < TimeOfSimulation;
+                        }).ToArray();
+
                         DataRow row = BgnnOrders.NewRow();
 
                         row["OID"] = argsweb["aname"];
@@ -266,7 +271,8 @@ namespace orcplan
                         row["DURATION"] = TimeSpan.FromMinutes(10.0);
                         row["TOT"] = row["TB"];
 
-                        BgnnOrders.Rows.Add(row);
+                        BgnnOrders.Rows.InsertAt(row, tbl.Length);
+                        BgnnOrders.DefaultView.Sort = "TB";
                         BgnnOrders.AcceptChanges();
 
                         string json = Newtonsoft.Json.JsonConvert.SerializeObject(
@@ -432,6 +438,7 @@ namespace orcplan
 
             dt.DefaultView.Sort = "TB";
             dt = dt.DefaultView.ToTable();
+            //dt.DefaultView.Sort = "TB";
 
             return dt;
         }
@@ -517,7 +524,7 @@ namespace orcplan
 
                 if (dtEvent < TimeOfSimulation) dtEvent = TimeOfSimulation;
 
-                if ((BgnnOrders.Rows.Count > 0) && (dtEvent > (DateTime)BgnnOrders.Rows[0]["TB"]))
+                if ((BgnnOrders.DefaultView.Count > 0) && (dtEvent > (DateTime)BgnnOrders.DefaultView[0]["TB"]))
                 {
                     firstEvent = InsertBeginningOrderToPlan(nextPlan);
                     stateNext = firstEvent != null ? (OINFO_STATE)firstEvent[colOINFO_STATE] : OINFO_STATE.UNDEFINE;
@@ -533,7 +540,7 @@ namespace orcplan
             }
             else
             {
-                if ((BgnnOrders.Rows.Count > 0))
+                if ((BgnnOrders.DefaultView.Count > 0))
                 {
                     firstEvent = InsertBeginningOrderToPlan(nextPlan);
                     if (firstEvent != null)
@@ -706,7 +713,7 @@ namespace orcplan
 
         private static DataRow InsertBeginningOrderToPlan(DataSet nextPlan)
         {
-            DateTime tb = (DateTime)BgnnOrders.Rows[0]["TB"];
+            DateTime tb = (DateTime)BgnnOrders.DefaultView[0]["TB"];
             nextPlan.Tables["SUMMARY"].Rows[0]["BUILDT"] = tb;
 
             if (PriorTimeSimulation > DateTime.MinValue)
@@ -718,11 +725,11 @@ namespace orcplan
                 PriorTimeSimulation = tb;
             }
 
-            DataRow bngRow = InsertBgnnOrder(BgnnOrders.Rows[0], nextPlan);
+            DataRow bngRow = InsertBgnnOrder(BgnnOrders.DefaultView[0].Row, nextPlan);
 
             lock (BgnnOrders)
             {
-                BgnnOrders.Rows.RemoveAt(0);
+                BgnnOrders.DefaultView.Delete(0);//.RemoveAt(0);
                 BgnnOrders.AcceptChanges();
             }
 
