@@ -123,7 +123,7 @@ namespace orcplan
 
                     case "INIT":
                     case "I":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18-D.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
