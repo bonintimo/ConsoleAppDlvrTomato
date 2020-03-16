@@ -53,7 +53,7 @@ namespace orcplan
         public static int MAX_ORDERS_FOR_COURIERS = 5;
         public static bool DYNAMIC_PARAMS = false;
         public static int MAX_DURATION_TO_SOURCE_SEC = 50 * 60;
-        public static int MAX_PLANNING_DURATION_MSEC = 20000;
+        public static int MAX_PLANNING_DURATION_MSEC = 30000;
 
         private static List<Task> taskList = new List<Task>();
 
@@ -123,7 +123,7 @@ namespace orcplan
 
                     case "INIT":
                     case "I":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-16-TM3TM18-TOT.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
