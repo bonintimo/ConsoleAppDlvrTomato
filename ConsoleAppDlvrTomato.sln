@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2003
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppDlvrTomato", "ConsoleAppDlvrTomato\ConsoleAppDlvrTomato.csproj", "{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}"
 EndProject
@@ -10,32 +10,46 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppMergingDisDur", "ConsoleAppMergingDisDur\ConsoleAppMergingDisDur.csproj", "{56C29085-5B40-46DE-87A1-BB41022E025C}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Debug|x64.ActiveCfg = Debug|x64
+		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Debug|x64.Build.0 = Debug|x64
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|x64.ActiveCfg = Release|x64
+		{5FF1DBE6-3177-4B8F-AFE2-F40B9B2E73FE}.Release|x64.Build.0 = Release|x64
 		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|x64.ActiveCfg = Debug|x64
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Debug|x64.Build.0 = Debug|x64
 		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|x64.ActiveCfg = Release|x64
+		{53CD14F4-BC3E-4B31-950C-AE5CF285E433}.Release|x64.Build.0 = Release|x64
 		{56C29085-5B40-46DE-87A1-BB41022E025C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{56C29085-5B40-46DE-87A1-BB41022E025C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56C29085-5B40-46DE-87A1-BB41022E025C}.Debug|x64.ActiveCfg = Debug|x64
+		{56C29085-5B40-46DE-87A1-BB41022E025C}.Debug|x64.Build.0 = Debug|x64
 		{56C29085-5B40-46DE-87A1-BB41022E025C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56C29085-5B40-46DE-87A1-BB41022E025C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56C29085-5B40-46DE-87A1-BB41022E025C}.Release|x64.ActiveCfg = Release|x64
+		{56C29085-5B40-46DE-87A1-BB41022E025C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C01EE8C3-1A4E-4ACE-AEAF-8962BEC1C5FB}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
