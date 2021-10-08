@@ -123,11 +123,11 @@ namespace orcplan
 
                     case "INIT":
                     case "I":
-                        ReadBgnnOrders(@"./ORDERS-2018-10-17-TM3TM18.tsv");
+                        ReadBgnnOrders(@"./ORDERS-2018-10-19-TM3TM18.tsv");
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
