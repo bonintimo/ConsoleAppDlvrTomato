@@ -18,27 +18,6 @@ using SimpleHttp;
 
 namespace orcplan
 {
-    //public class RestaurantMachine : StateMachine
-    //{
-    //    public RestaurantMachine()
-    //    {
-    //    }
-
-    //    public override bool Equals(object obj)
-    //    {
-    //        return base.Equals(obj);
-    //    }
-
-    //    public override int GetHashCode()
-    //    {
-    //        return base.GetHashCode();
-    //    }
-
-    //    public override string ToString()
-    //    {
-    //        return base.ToString();
-    //    }
-    //}
 
     enum OINFO_STATE { UNDEFINE = 100, BEGINNING = 110, COOKING = 120, READY = 130, TRANSPORTING = 140, PLACING = 150, ENDED = 160 };
     enum RINFO_STATE { UNDEFINE = 200, OFFLINE = 210, ONLINE = 220, BRAKEDOWN = 230 };
@@ -74,9 +53,8 @@ namespace orcplan
             Console.WriteLine();
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
-            //TspDoTest(args);
 
-            //Console.WriteLine("Hello World!");
+            //TspDoTest(args);
 
             CreateSchemaForDeliveryPlan(args);
 
@@ -98,8 +76,6 @@ namespace orcplan
             OINFO_STATE stateNext = OINFO_STATE.UNDEFINE;
             do
             {
-
-                //Console.WriteLine("Write the file name with a delivery plan:");
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine();
                 Console.Write($"{BaseDirectoryForDPR} Type a command:");
@@ -127,7 +103,7 @@ namespace orcplan
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R2C4.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -155,33 +131,11 @@ namespace orcplan
                         Console.WriteLine("Unknown command!!!");
                         break;
                 }
-                //DataSet deliveryPlan = ReadPlan(filePlan);// ReadTestPlan();
-
-                //PlanningForOrders(DateTime.Parse(@"2018-09-10T11:55:00+03:00"), deliveryPlan);
 
                 GC.Collect();
             }
             while (isContinue);
 
-            //tbl.Loa
-            //WebClient client = new WebClient();
-            //client.Headers["accept"] = "application/json";
-            //client.Headers["content-type"] = "application/json";
-            //NameValueCollection values = new NameValueCollection();
-            //values["data"]= "{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": 37.644166, \"y\": 54.202089 }, { \"type\": \"pedo\", \"x\": 37.690007, \"y\": 54.209826 } ], \"type\": \"jam\", \"output\":\"simple\"}";
-            //var response = client.UploadValues( @"http://catalog.api.2gis.ru//carrouting/4.0.0/tula/?key=rueejy0019" , values);
-
-
-            //string r = GetGeoPathTotal( "54.202089", "37.644166", "54.202089", "37.644166");
-
-            //JsonValue json = JsonValue.Parse(r);
-            //var dur = json["result"][0]["duration"];
-
-            //var len = json["result"][0]["length"];
-
-            //Task.WaitAll(taskList.ToArray());
-
-            //Console.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
         }
 
         private static int GeoRouteInfoQuantity = 0;
@@ -199,12 +153,6 @@ namespace orcplan
 
         private static void StartWebServer()
         {
-            //SimpleHttp.Route.Add(
-            //    "/actor",
-            //    (rqweb, rpweb, argsweb) =>
-            //    {
-            //    });
-
             SimpleHttp.Route.Add(
                 "/info/{aname}/{atime}/{alat}/{alng}/",
                 (rqweb, rpweb, argsweb) =>
@@ -394,10 +342,6 @@ namespace orcplan
                 using (StreamReader sr = new StreamReader(strFilePath))
                 {
                     string[] headers = sr.ReadLine().Split('\t');
-                    //foreach (string header in headers)
-                    //{
-                    //    dt.Columns.Add(header);
-                    //}
                     while (!sr.EndOfStream)
                     {
                         string[] rows = sr.ReadLine().Split('\t');
@@ -408,10 +352,6 @@ namespace orcplan
                         }
 
                         DataRow dr = dt.NewRow();
-                        //for (int i = 0; i < headers.Length; i++)
-                        //{
-                        //    dr[i] = rows[i];
-                        //}
                         {
                             string[] oid = rows[0].Split(' ');
                             dr["OID"] = oid[1];
@@ -438,7 +378,6 @@ namespace orcplan
 
             dt.DefaultView.Sort = "TB";
             dt = dt.DefaultView.ToTable();
-            //dt.DefaultView.Sort = "TB";
 
             return dt;
         }
@@ -448,24 +387,11 @@ namespace orcplan
             string requestString = String.Concat("https://geocode-maps.yandex.ru/1.x/?apikey=a1d0badd-df1d-4814-8d43-eab723c50133&format=json&geocode=", WebUtility.HtmlEncode(dr["ADDRESS"].ToString()));
 
             var request = (HttpWebRequest)WebRequest.Create(requestString);
-            //request.Headers[]=;
 
-            //var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
-
-            GeoRouteData geoInfo = null;// String.Empty;
+            GeoRouteData geoInfo = null;
             if (!GeoRouteInfo.TryGetValue(requestString, out geoInfo))
             {
-
-                //var data = Encoding.ASCII.GetBytes(postData);
-
                 request.Method = "GET";
-                //request.ContentType = "application/x-www-form-urlencoded";
-                //request.ContentLength = data.Length;
-
-                //using (var stream = request.GetRequestStream())
-                //{
-                //    stream.Write(data, 0, data.Length);
-                //}
 
                 var response = (HttpWebResponse)request.GetResponse();
 
@@ -620,17 +546,15 @@ namespace orcplan
 
             nextPlan.Tables[tblCINFO].Select().All<DataRow>(rowCinfo =>
             {
-                //DataRow[] 
                 var ordsCinfo = nextPlan.Tables[tblOINFO].Select().Where<DataRow>(oRow =>
                 {
                     return (oRow[colOINFO_CID].ToString() == rowCinfo[colCINFO_CID].ToString());
-                });//.ToArray();
+                });
 
-                //DataRow[] 
                 var ordsTrans = ordsCinfo.Where<DataRow>(oRow =>
                 {
                     return (((OINFO_STATE)oRow[colOINFO_STATE]) == OINFO_STATE.TRANSPORTING);
-                });//.ToArray();
+                });
 
                 if (((CINFO_STATE)rowCinfo[colCINFO_STATE]) == CINFO_STATE.ONROAD)
                 {
@@ -676,18 +600,7 @@ namespace orcplan
                 string lngD = (string)rInfo[colRINFO_LNG];
 
                 {
-                    //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
                     GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                    //JsonValue json = JsonValue.Parse(r);
-
-                    //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                    //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                    //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                    //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                    //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     if (r.Duration == 0)
                     {
@@ -784,9 +697,6 @@ namespace orcplan
                 case OINFO_STATE.PLACING:
                     {
                         DataRow cid = nextPlan.Tables[tblCINFO].Rows.Find(firstEvent[colOINFO_CID]);
-                        //cid[colCINFO_ADDRESS] = firstEvent[colORDERS_ADDRESS];
-                        //cid[colCINFO_LAT] = firstEvent[colORDERS_LAT];
-                        //cid[colCINFO_LNG] = firstEvent[colORDERS_LNG];
                         cid[colCINFO_TOS] = GetDateTimeEvent(firstEvent);
                     }
 
@@ -853,7 +763,6 @@ namespace orcplan
             }
             catch
             {
-                //appLog.WriteLine($"no geoinfo about [{dataRow["ADDRESS"].ToString()}]");
                 ConsoleColor concol = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"beginning exception for {dataRow["OID"]} at {dataRow["TB"]}");
@@ -878,15 +787,12 @@ namespace orcplan
 
         private static DataSet ReadPlan(string v)
         {
-            //throw new NotImplementedException();
-
             DataSet set = new DataSet("DLVR");
             set.ReadXmlSchema("testxmlschema.xml");
             set.ReadXml(v);
 
             DateTime buildt = (DateTime)set.Tables["SUMMARY"].Rows[0]["BUILDT"];
             TimeOfSimulation = buildt;
-            //PriorTimeSimulation = buildt;
             return set;
         }
 
@@ -917,7 +823,7 @@ namespace orcplan
 
         private static DataSet PlanningForOrders(DataSet deliveryPlan)
         {
-            TheBestDeliveryPlan = null;// deliveryPlan;
+            TheBestDeliveryPlan = null;
             TheFastDeliveryPlan = null;
             TheShortDeliveryPlan = null;
 
@@ -929,14 +835,6 @@ namespace orcplan
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"DELIVERY PLAN AT {TimeOfSimulation}");
 
-            //deliveryPlan.Tables["SUMMARY"].Rows.Clear();
-            //DataRow row = deliveryPlan.Tables["SUMMARY"].NewRow();
-            //row["BUILDT"] = buildt;
-            //deliveryPlan.Tables["SUMMARY"].Rows.Add(row);
-
-            //deliveryPlan.AcceptChanges();
-
-            //throw new NotImplementedException();
             DateTime beginDateTime = DateTime.Now;
 
             int rCount = deliveryPlan.Tables[tblRINFO].Rows.Count;
@@ -956,7 +854,6 @@ namespace orcplan
             BaseDirectoryForCDP = dir;
 
             appLog = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, $"DPL.log"));
-
 
             appLog.WriteLine($"MAX_RESTAURANTS_FOR_PLANNING: {MAX_RESTAURANTS_FOR_PLANNING}");
             appLog.WriteLine($"MAX_COURIERS_FOR_PLANNING: {MAX_COURIERS_FOR_PLANNING}");
@@ -987,25 +884,6 @@ namespace orcplan
 
             appLog.Flush();
 
-            //DataTable orders = deliveryPlan.Tables["ORDERS"];
-            //DataTable Rinfo = deliveryPlan.Tables["RINFO"];
-            //DataTable Cinfo = deliveryPlan.Tables["CINFO"];
-
-            //string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dir, "deliveryPlan.xml");
-            //deliveryPlan.WriteXml(xmlFileName);
-
-            //PlanningForInitialPlan(dir + Path.DirectorySeparatorChar, deliveryPlan);
-
-            //PlanningForTunning(dir + Path.DirectorySeparatorChar, deliveryPlan);
-
-            // 20190503 DataRow[] beginningOrders = GetBeginningOrders(deliveryPlan, buildt);
-
-            //beginningOrders.C
-
-            // 20190503 TryBeginningOrders(deliveryPlan, dir, beginningOrders);
-
-            // 20190504 DataSet dlvrPlan = deliveryPlan.Copy();
-
             TimeForPlanning.Reset();
             TimeForPlanning.Start();
 
@@ -1019,7 +897,7 @@ namespace orcplan
             do
             {
                 bgnnOrders = bgnnOrdersReadyToStart;
-                TheBestDeliveryPlan = null;// deliveryPlan;
+                TheBestDeliveryPlan = null;
                 TheFastDeliveryPlan = null;
                 TheShortDeliveryPlan = null;
                 bestTotalDistance = int.MaxValue;
@@ -1030,15 +908,6 @@ namespace orcplan
                     string processSig = GetProgressCountSignature(deliveryPlan);
                     CorrectProcessParams(processSig);
                 }
-
-                //BldCinfoPlans = deliveryPlan.Tables[tblCINFO].Select().Select<DataRow, BuildingCinfoPlan>(row =>
-                // {
-                //     BuildingCinfoPlan info = new BuildingCinfoPlan();
-                //     info.deliveryPlan = deliveryPlan;
-                //     info.row = row;
-                //     info.BuildRouteForCinfoSecondFld = BuildRouteForCinfoSecond;
-                //     return info;
-                // }).ToArray();
 
                 ConsoleColor concol = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Magenta;
@@ -1073,44 +942,9 @@ namespace orcplan
             }
             while (bgnnOrders.Length != bgnnOrdersReadyToStart.Length);
 
-            //XmlSerializer serialiser1 = new XmlSerializer(typeof(Dictionary<string, string>));
-            //TextWriter Filestream1 = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), dir, @"georouteinfo.xml"));
-            //serialiser1.Serialize(Filestream1, GeoRouteInfo);
-            //Filestream1.Close();
-
             TimeForPlanning.Stop();
 
             UpdateProgressTimings(TheBestDeliveryPlan, TimeForPlanning);
-
-            //if (DYNAMIC_PARAMS)
-            //{
-            //    if (TimeForPlanning.ElapsedMilliseconds > 15000)
-            //    {
-            //        if (MAX_RESTAURANTS_FOR_PLANNING > 1)
-            //        {
-            //            MAX_RESTAURANTS_FOR_PLANNING -= 1;
-            //        }
-            //        if (MAX_COURIERS_FOR_PLANNING > 1)
-            //        {
-            //            MAX_COURIERS_FOR_PLANNING -= 1;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        if (MAX_COURIERS_FOR_PLANNING < 3)
-            //        {
-            //            MAX_COURIERS_FOR_PLANNING += 1;
-            //        }
-            //        else
-            //        {
-            //            if (MAX_RESTAURANTS_FOR_PLANNING < 2)
-            //            {
-            //                MAX_RESTAURANTS_FOR_PLANNING += 1;
-            //            }
-            //        }
-            //    }
-            //}
-
 
             appLog.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
             DateTime finishDateTime = DateTime.Now;
@@ -1204,9 +1038,6 @@ namespace orcplan
             int cntRepeat = (int)Math.Sqrt(countRIDs * countCIDs);
             int loopRIDs = cntRepeat > countRIDs ? (int)countRIDs : cntRepeat;
             int loopCIDs = cntRepeat > countCIDs ? (int)countCIDs : cntRepeat;
-            //countRIDs /= 2;
-            //countRIDs++;// if countRIDs == 0
-            //while (countRIDs > 0)
             foreach (int forRIDs in Enumerable.Range(1, loopRIDs))
             {
                 if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
@@ -1228,11 +1059,7 @@ namespace orcplan
                     return true;
                 });
 
-                //if (countRIDs * 2 < countCIDs) countCIDs /= countRIDs;
                 Console.Write($"C{countCIDs}");
-                //countCIDs /= 2;
-                //countCIDs++;
-                //while (countCIDs > 0)
                 foreach (int forCIDs in Enumerable.Range(1, loopCIDs))
                 {
                     if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) break;
@@ -1246,11 +1073,7 @@ namespace orcplan
                     deliveryPlan.AcceptChanges();
 
                     PlanningRoutesParallel(dir, deliveryPlan, bgnnOrders);
-
-                    //countCIDs--;
                 }
-
-                //countRIDs--;
             }
 
         }
@@ -1388,7 +1211,6 @@ namespace orcplan
 
         private static DataRow[] GetBeginningOrders(DataSet deliveryPlan, DateTime buildt)
         {
-            //MAX_BEGINING_ORDERS_TO_ADD???
             DataRow[] beginningOrders = deliveryPlan.Tables[tblOINFO].Rows.Cast<DataRow>().Where<DataRow>(row =>
             {
                 DateTime newStart = (DateTime)row[colOINFO_TC] + TimeSpan.FromTicks(Math.Abs(((TimeSpan)row[colOINFO_TD]).Ticks) / 2);
@@ -1438,12 +1260,10 @@ namespace orcplan
             StringBuilder scriptPlan = new StringBuilder();
 
             scriptPlan.AppendLine("<!DOCTYPE html>");
-            //scriptPlan.AppendLine($"<html><head><title>TBDP {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()}</title>");
             scriptPlan.AppendLine($"<html><head><title>{pageTitle}</title>");
             scriptPlan.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>");
             scriptPlan.AppendLine(metaExt);
             scriptPlan.AppendLine("<script src=\"https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=a1d0badd-df1d-4814-8d43-eab723c50133\" type=\"text/javascript\"></script>");
-            //scriptPlan.AppendLine("<script src=\"animated_line.js\" type =\"text/javascript\"></script>");
             scriptPlan.AppendLine("<script type=\"text/javascript\">");
 
             string planCenterLat = "54.206134";
@@ -1462,7 +1282,6 @@ namespace orcplan
             scriptPlan.AppendLine($"function init() {{ var myMap = new ymaps.Map(\"map\", {{ center: [{planCenterLat}, {planCenterLng}], zoom: 13, controls: ['smallMapDefaultSet'] }}, {{ searchControlProvider: 'yandex#search' }});");
             scriptPlan.AppendLine($"function setCenterPlan() {{ myMap.setCenter([{planCenterLat}, {planCenterLng}], 13, {{ checkZoomRange: true }}); }}");
             scriptPlan.AppendLine($"function setCenterOrder() {{ myMap.setCenter([{ordrCenterLat}, {ordrCenterLng}], 13, {{ checkZoomRange: true }}); }}");
-            //scriptPlan.AppendLine($"myMap.controls.add( new ymaps.control.Button(\"{theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}\"), {{maxWidth:2000, float: 'right'}});");
 
             string sigH = $"R{MAX_RESTAURANTS_FOR_PLANNING.ToString("D2")}C{MAX_COURIERS_FOR_PLANNING.ToString("D2")}";
             scriptPlan.AppendLine($"var btnBuildOrdr = new ymaps.control.Button(\"{sigH}:{GetProgressCountSignature(theBestDeliveryPlan)} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"].ToString()} {Enum.GetName(typeof(OINFO_STATE), (OINFO_STATE)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDS"])} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]).ToString(@"hh\:mm\:ss")} {((TimeSpan)theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]).ToString(@"hh\:mm\:ss")} {theBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString()}\");");
@@ -1508,7 +1327,6 @@ namespace orcplan
                 scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 200, float: 'none', position: {{ left: 'auto', right: 10, top: {50 + 35 * cInfo.Table.Rows.IndexOf(cInfo)}, bottom: 'auto' }} }});");
 
                 scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
-                //scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Placemark([{cInfo[colCINFO_LAT].ToString()}, {cInfo[colCINFO_LNG].ToString()}], {{ iconCaption: '{cInfo[colCINFO_CID]}', hintContent: '{cInfo[colCINFO_LAT]} {cInfo[colCINFO_LNG]} {cInfo[colCINFO_ADDRESS]}'}}, {{preset: 'islands#blueCircleDotIconWithCaption'}} ));");
 
                 string[] pnts = cInfo[colCINFO_ROUTE].ToString().Split('-');
 
@@ -1541,16 +1359,10 @@ namespace orcplan
 
                 coords += $",[{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LAT].ToString()},{theBestDeliveryPlan.Tables[tblRINFO].Rows.Find(cInfo[colCINFO_RID4S])[colRINFO_LNG].ToString()}]";
 
-                //scriptPlan.AppendLine($"myMap.geoObjects.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3 }} ));");
                 scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.Polyline([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 3, strokeOpacity: 0.3 }} ));");
                 scriptPlan.AppendLine($"coll{hashCode}.add(new ymaps.multiRouter.MultiRoute({{ referencePoints:[{coords}], params: {{ results: 1 }} }}, {{  wayPointVisible:false, viaPointVisible:false,  pinVisible:false, boundsAutoApply: false }}));");
                 scriptPlan.AppendLine($"function addColl{hashCode}() {{ myMap.geoObjects.add(coll{hashCode}); }}");
                 scriptPlan.AppendLine($"function delColl{hashCode}() {{ myMap.geoObjects.remove(coll{hashCode}); }}");
-                //scriptPlan.AppendLine($"addColl{hashCode}();");
-                //scriptPlan.AppendLine($"{{ var animLine = new ymaps.AnimatedLine([{coords}], {{ balloonContent:'{cInfo[colCINFO_CID].ToString()} : {cInfo[colCINFO_ROUTE].ToString()}'}}, {{strokeColor: '#000000', strokeWidth: 6, strokeOpacity: 0.3, animationTime: 4000 }} );");
-                //scriptPlan.AppendLine($"myMap.geoObjects.add(animLine);");
-                //scriptPlan.AppendLine($"function playAnimation() {{ animLine.animate().then(function(){{return ymaps.vow.delay(null, 2000);}}).then(function(){{playAnimation();}}); }}");
-                //scriptPlan.AppendLine($"playAnimation(); }}");
                 scriptPlan.AppendLine("}");
             }
 
@@ -1589,7 +1401,6 @@ namespace orcplan
                 + ((DateTime)oInfo[colOINFO_TE]).ToString(((((OINFO_STATE)oInfo[colCINFO_STATE]) == OINFO_STATE.ENDED) ? " HH:mm E" : " HH:mm ~"));
             scriptPlan.AppendLine($"var btn{hashCode} = new ymaps.control.Button(\"{oInfo[colOINFO_OID]} ~ {ordrTimes} - {oInfo[colOINFO_CID]}\");");
             scriptPlan.AppendLine($"btn{hashCode}.options.set('layout', btnLayout);");
-            //scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 10, right: 'auto', top: {200 + 35 * oInfo.Table.Rows.IndexOf(oInfo)}, bottom: 'auto' }} }});");
             scriptPlan.AppendLine($"myMap.controls.add(btn{hashCode}, {{maxWidth: 2000, float: 'none', position: {{ left: 15, right: 'auto', top: {btnPos}, bottom: 'auto' }} }});");
             btnPos += 35;
 
@@ -1649,8 +1460,6 @@ namespace orcplan
 
         private static void BuildNameIndex(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
-
             tblOINFO = deliveryPlan.Tables.IndexOf("OINFO");
             colOINFO_STATE = deliveryPlan.Tables[tblOINFO].Columns.IndexOf("OSTATE");
             colOINFO_OID = deliveryPlan.Tables[tblOINFO].Columns.IndexOf("OID");
@@ -1689,8 +1498,6 @@ namespace orcplan
 
         private static void PlanningForTunning(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            //throw new NotImplementedException();
-
             TimeSpan spanMAX = TimeSpan.MinValue;
             DataRow rowMAX = null;
             deliveryPlan.Tables[tblOINFO].Select().All((r) =>
@@ -1754,17 +1561,12 @@ namespace orcplan
 
         private static void PlanningForInitialPlan(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            //DataSet initPlan = CreateInitialPlanByNearest(deliveryPlan);// CreateInitialPlan(deliveryPlan);
-            //DataSet initPlan = CreateInitialPlan(deliveryPlan);// CreateInitialPlan(deliveryPlan);
             DataSet initPlan = CreateInitialPlanWithTsp(deliveryPlan);
             PlanningForCinfo(dir, 0, initPlan, bgnnOrders, 0);
-
-            //initPlan.WriteXml(Path.Combine(Directory.GetCurrentDirectory(), dir, "initplan.xml"));
         }
 
         private static DataSet CreateInitialPlanWithTsp(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
             DataSet initPlan = deliveryPlan.Copy();
 
             List<DataRow> listPnts = new List<DataRow>(initPlan.Tables[tblOINFO].Select());
@@ -1807,8 +1609,6 @@ namespace orcplan
 
         private static DataSet CreateInitialPlanByNearest(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
-
             DataSet initPlan = deliveryPlan.Copy();
 
             int minRinfo = int.MaxValue;
@@ -1820,19 +1620,7 @@ namespace orcplan
 
                 foreach (DataRow rinfo in initPlan.Tables[tblRINFO].Rows)
                 {
-                    //string r = GetGeoPathTotal2Gis(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
-                    //string r = GetGeoPathTotalYandex(DateTime.MinValue, rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
                     GeoRouteData r = GetGeoPathTotalOSRM(DateTime.MinValue, rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
-                    //JsonValue json = JsonValue.Parse(r);
-
-                    //double distBet = GetGeoPathDistance(rinfo["LAT"].ToString(), rinfo["LNG"].ToString(), order["LAT"].ToString(), order["LNG"].ToString());
-
-                    //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                    //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                    //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                    //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     if (r.Duration < minRinfo)
                     {
@@ -1843,19 +1631,7 @@ namespace orcplan
 
                         foreach (DataRow cinfo in initPlan.Tables[tblCINFO].Rows)
                         {
-                            //string rCinfo = GetGeoPathTotal2Gis(cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
-                            //string rCinfo = GetGeoPathTotalYandex(DateTime.MinValue, cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
                             GeoRouteData rCinfo = GetGeoPathTotalOSRM(DateTime.MinValue, cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
-                            //JsonValue jsonCinfo = JsonValue.Parse(rCinfo);
-
-                            //double distBetCinfo = GetGeoPathDistance(cinfo["LAT"].ToString(), cinfo["LNG"].ToString(), rinfo["LAT"].ToString(), rinfo["LNG"].ToString());
-
-                            //int dddCinfo = int.Parse(jsonCinfo["result"][0]["duration"].ToString());
-                            //int lllCinfo = int.Parse(jsonCinfo["result"][0]["length"].ToString());
-                            //int dddCinfo = (int)distBetCinfo / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                            //int lllCinfo = (int)distBetCinfo;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                            //int dddCinfo = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                            //int lllCinfo = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                             if (rCinfo.Duration < minCinfo)
                             {
@@ -1874,11 +1650,8 @@ namespace orcplan
 
         private static DataSet CreateInitialPlan(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
-
             DataSet initPlan = deliveryPlan.Copy();
 
-            //var json = JsonValue.Parse("{ \"start\": { \"lat\": 54.998493600520156, \"lon\": 82.65769958496095 }, \"finish\": { \"lat\": 55.05516914322075, \"lon\": 83.15208435058594 }, \"checkpoints\": [ { \"lat\": 54.99770587584445, \"lon\": 82.79502868652345 }, { \"lat\": 54.99928130973027, \"lon\": 82.92137145996095, \"delay\": 300 }, { \"lat\": 55.04533538802211, \"lon\": 82.98179626464844 }, { \"lat\": 55.072470687600536, \"lon\": 83.04634094238281 } ] }");
             StringBuilder Q = new StringBuilder();
             Q.Append("{ ");
             //Q.Append("\"detailed\": true, ");
@@ -1923,7 +1696,6 @@ namespace orcplan
             if ((PlanningDur.ElapsedMilliseconds > MAX_PLANNING_DURATION_MSEC) && (TheBestDeliveryPlan != null)) return;
 
             WatchPlanningForCartesian.Start();
-            //throw new NotImplementedException();
 
             //ClearRouteInformation(deliveryPlan);
 
@@ -1931,18 +1703,7 @@ namespace orcplan
 
             if (vOrder >= OrdersRows.Count)
             {
-                //string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dir + ".xml");//Path.GetRandomFileName());
-                ////string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dir, "(" + deliveryPlan.Tables["ORDERS"].Rows. + ")(" + deliveryPlan.Tables["ORDERS"].Rows[v]["CID"] + ").xml");
-                ////string xmlFileName = dir + ".xml";
-                //deliveryPlan.WriteXml(xmlFileName);
-
-
-                //DataSet copyDeliveryPlan = deliveryPlan.Copy();
-                //Task task = Task.Run(() =>
-                // {
                 WatchPlanningForCartesian.Stop();
-                //PlanningForCinfo(dir, 0, deliveryPlan, bgnnOrders, 0);
-                //Console.WriteLine(dir);
 
                 if (passLevel > 1)
                 {
@@ -1952,9 +1713,6 @@ namespace orcplan
                 {
                     PlanningForCartesian(dir, passLevel + 1, 0, deliveryPlan, bgnnOrders);
                 }
-                // });
-                //task.Start();
-                //taskList.Add(task);
             }
             else
             {
@@ -1969,7 +1727,6 @@ namespace orcplan
                     case OINFO_STATE.COOKING:
                     case OINFO_STATE.READY:
                         WatchPlanningForCartesian.Stop();
-                        //foreach (DataRow c in ResortRows(deliveryPlan.Tables[tblRINFO].Select($"RID = '{OrdersRows[vOrder][colORDERS_RID].ToString()}'")[0], deliveryPlan.Tables[tblCINFO].Rows).Take(3))
                         PlanningForCartesianOrderStateCookingReady(dir, passLevel, vOrder, deliveryPlan, OrdersRows, bgnnOrders);
                         WatchPlanningForCartesian.Start();
                         break;
@@ -1979,7 +1736,6 @@ namespace orcplan
                     case OINFO_STATE.ENDED:
                         WatchPlanningForCartesian.Stop();
                         PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + OrdersRows[vOrder][colOINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
-                        //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                         WatchPlanningForCartesian.Start();
                         break;
 
@@ -2012,8 +1768,6 @@ namespace orcplan
             public DataRow[] bgnnOrders { get; set; }
             public DataRow row { get; set; }
             public BuildRouteForCinfoSecondDlgt BuildRouteForCinfoSecondFld { get; set; }
-
-            //ManualResetEvent mre = new ManualResetEvent(false);
         }
 
         private static BuildingCinfoPlan[] BldCinfoPlans = null;
@@ -2025,32 +1779,12 @@ namespace orcplan
 
         private static void PlanningRoutesParallel(string dir, DataSet deliveryPlan, DataRow[] bgnnOrders)
         {
-            //BldCinfoPlans.All(info =>
-            //{
-            //    info.dir = dir;
-            //    info.bgnnOrders = bgnnOrders;
-            //    info.Set();
-            //    return true;
-            //});
-
-            //ManualResetEvent.WaitAll(BldCinfoPlans);
-
             workTotalDistance = 0;
             workTotalDuration = 0;
 
-            //CancellationTokenSource cts = new CancellationTokenSource();
-            //ParallelOptions po = new ParallelOptions() { CancellationToken = cts.Token, MaxDegreeOfParallelism = Environment.ProcessorCount };
-            //try
-            //{
             ParallelLoopResult parResult = System.Threading.Tasks.Parallel.ForEach(deliveryPlan.Tables[tblCINFO].Select(),
-                //po,
                 (row, loopState) =>
             {
-                //if (loopState.IsStopped)
-                //{
-                //    return;
-                //}
-                //BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row);
                 BuildRouteForCinfoInternal(deliveryPlan, bgnnOrders, row, loopState);
                 if (loopState.IsStopped) return;
 
@@ -2059,35 +1793,11 @@ namespace orcplan
                     if ((workTotalDistance > bestTotalDistance) && (workTotalDuration > bestTotalDuration))
                     {
                         loopState.Stop();
-                        //cts.Cancel();
                     }
                 }
-                //po.CancellationToken.ThrowIfCancellationRequested();
             });
-            //}
-            //catch (OperationCanceledException e)
-            //{
-            //    Console.Write("X");
-            //}
-            //finally { cts.Dispose(); }
-            //Task[] cinfoTasks = 
-            //deliveryPlan.Tables[tblCINFO].Select().All(row =>//.Select<DataRow, Task>(row =>
-            //{
-
-            //return Task.Run(BuildRouteForCinfoSecond(dir, deliveryPlan, bgnnOrders, row));
-            //    return true;
-            //});//.ToArray();
-
-            //Task.WaitAll(cinfoTasks);
-
-            //if (!cinfoTasks.All((t) => { return ((Task<bool>)t).Result; }))
-            //{
-            //    Console.WriteLine("The building of routes has a problem.");
-            //    return;
-            //}
 
             if (parResult.IsCompleted)
-            //if (!cts.IsCancellationRequested)
             {
                 deliveryPlan.AcceptChanges();
 
@@ -2102,7 +1812,6 @@ namespace orcplan
                 Console.Write("X");
                 Console.ForegroundColor = concol;
             }
-            //cts.Dispose();
         }
 
         private static int CalcTotalRouteLength(DataSet deliveryPlan)
@@ -2138,19 +1847,12 @@ namespace orcplan
             };
         }
 
-        //private class RoutePoint
-        //{
-        //    public DataRow OinfoRow { get; set; }
-        //    public DataRow RinfoRow { get; set; }
-        //}
-
         private static void BuildRouteForCinfoInternal(DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow cInfo, ParallelLoopState pls = null)
         {
             if (pls.IsStopped) return;
 
             LinkedList<string> routeList = new LinkedList<string>();
 
-            //DataRow[] 
             var planOrders = deliveryPlan.Tables[tblOINFO].Select().Where(row =>
             {
                 if (row is null) return false;
@@ -2170,7 +1872,7 @@ namespace orcplan
                 {
                     return (DateTime)row[colOINFO_TR] + (TimeSpan)TimeForDeliveringDirect(deliveryPlan, row);
                 }
-            });//.ToArray();
+            });
 
             if (pls.IsStopped) return;
 
@@ -2280,12 +1982,7 @@ namespace orcplan
         {
             DataRow rInfo = deliveryPlan.Tables[tblRINFO].Rows.Find(row[colOINFO_RID].ToString());
 
-            //double dst = GetGeoPathDistance(rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
-
             GeoRouteData r = GetGeoPathTotalOSRM(DateTime.MinValue, rInfo[colRINFO_LAT].ToString(), rInfo[colRINFO_LNG].ToString(), row[colOINFO_LAT].ToString(), row[colOINFO_LNG].ToString());
-            //JsonValue json = JsonValue.Parse(r);
-            //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-            //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
             return TimeSpan.FromSeconds(r.Duration);
         }
@@ -2325,9 +2022,6 @@ namespace orcplan
                     listPnts.Add(OrdersRow);
                     if (OrdersRow is null) throw new Exception();
                 }
-
-
-                //routeTunning.AddLast(idxLinked.Value);
             }
             if (listPnts.Count > 1) TspAndAdd(listPnts, routeTunning);
 
@@ -2338,12 +2032,8 @@ namespace orcplan
         {
             TspTour tour = TspDoTsp(listPnts, false, true);
 
-            //TspStop[] stops = tour.Cycle().ToArray();
-            //int cnt = tour.Cycle().Count();
-            //for (int i = 1; i < stops.Length; i++)
             foreach (TspStop stop in tour.Cycle().Skip(1))
             {
-                //routeTunning.AddLast(stops[i].City.CityID);
                 routeTunning.AddLast(stop.City.CityID);
             }
         }
@@ -2352,44 +2042,8 @@ namespace orcplan
         {
             return () =>
             {
-                //string route = String.Join("-", deliveryPlan.Tables[tblORDERS].Select($"CID = '{cInfo[colCINFO_CID]}'").Select<DataRow, string>(r => { return $"{r[colORDERS_RID].ToString()}:{r[colORDERS_OID].ToString()}"; }));
-
                 LinkedList<string> routeList = new LinkedList<string>();
 
-                //DataRow[] transOrders = deliveryPlan.Tables[tblORDERS].Select().Where(row =>
-                //{
-                //    lock (row)
-                //    {
-                //        return (((ORDER_STATE)row[colORDERS_STATE]) == ORDER_STATE.TRANSPORTING)
-                //            && row[colORDERS_CID].ToString() == cInfo[colCINFO_CID].ToString();
-                //    }
-                //}).ToArray();
-
-                //List<DataRow> listPnts = new List<DataRow>();// transOrders.Length + 1);
-                //listPnts.Add(cInfo);
-                //listPnts.AddRange(transOrders);
-
-                //TspTour transTour = TspDoTsp(listPnts, false, false);
-
-                //DataRow lastOinfo = null;
-                //foreach (DataRow oInfo in transTour.Cycle().Select<TspStop, DataRow>(stop => stop.City.CityInfo).Skip(1))
-                //{
-                //    lock (oInfo)
-                //    {
-                //        routeList.AddLast(new LinkedListNode<string>(oInfo[colORDERS_OID].ToString()));
-                //        lastOinfo = oInfo;
-                //    }
-                //}
-
-                //if (lastOinfo != null)
-                //{
-                //    lock (lastOinfo)
-                //    {
-                //        routeList.AddLast(new LinkedListNode<string>($"{lastOinfo[colORDERS_RID].ToString()}[]"));
-                //    }
-                //}
-
-                //DataRow[] 
                 var planOrders = deliveryPlan.Tables[tblOINFO].Select().Where(row =>
                 {
                     lock (row)
@@ -2404,9 +2058,9 @@ namespace orcplan
                  {
                      lock (row)
                      {
-                         return (DateTime)row[colOINFO_TR];// row[colORDERS_RID].ToString();
+                         return (DateTime)row[colOINFO_TR];
                      }
-                 });//.ToArray();
+                 });
 
                 Dictionary<string, List<DataRow>> ordsPackets = new Dictionary<string, List<DataRow>>();
 
@@ -2424,9 +2078,6 @@ namespace orcplan
 
                         if (!ordsPackets.ContainsKey(RID))
                         {
-                            //routeList.AddLast(new LinkedListNode<string>($"{oInfo[colORDERS_RID].ToString()}[{oInfo[colORDERS_OID].ToString()}]"));
-                            //routeList.AddLast(new LinkedListNode<string>(oInfo[colORDERS_OID].ToString()));
-
                             ordsPackets.Add(RID, new List<DataRow>() { oInfo });
                         }
                         else
@@ -2439,7 +2090,7 @@ namespace orcplan
                 List<string> ordsPacketsKeys = new List<string>(ordsPackets.Keys.Count + 1);
 
                 {
-                    List<DataRow> listPnts = new List<DataRow>();// transOrders.Length + 1);
+                    List<DataRow> listPnts = new List<DataRow>();
                     if (String.IsNullOrEmpty(ridTRANSTATE))
                     {
                         listPnts.Add(cInfo);
@@ -2464,12 +2115,9 @@ namespace orcplan
                     }
                 }
 
-                //ordsPacketsKeys =  ordsPacketsKeys.OrderBy(rid=>)
-
                 if (!String.IsNullOrEmpty(ridTRANSTATE))
                 {
                     List<DataRow> routeRID = ordsPackets[ridTRANSTATE];
-                    //List<DataRow> routeRID = ordsPackets[ordsPacketsKeys[0]];// rid];
 
                     if (routeRID.Count > MAX_ORDERS_FOR_COURIERS) return false;
 
@@ -2501,13 +2149,11 @@ namespace orcplan
                     routeList.AddLast(new LinkedListNode<string>($"{ridTRANSTATE}[]"));
                 }
 
-                //foreach (string rid in ordsPackets.Keys)
                 foreach (string rid in ordsPacketsKeys)
                 {
                     if (rid == ridTRANSTATE) continue;
 
                     List<DataRow> routeRID = ordsPackets[rid];
-                    //List<DataRow> routeRID = ordsPackets[ordsPacketsKeys[0]];// rid];
 
                     if (routeRID.Count > MAX_ORDERS_FOR_COURIERS) return false;
 
@@ -2588,7 +2234,6 @@ namespace orcplan
 
                         WatchPlanningForCartesianOrderStateCookingReady.Stop();
                         PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colOINFO_RID].ToString() + "-" + c[colCINFO_CID].ToString() + ")", passLevel, vOrder + 1, deliveryPlan, bgnnOrders);
-                        //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                         WatchPlanningForCartesianOrderStateCookingReady.Start();
                     }
                     break;
@@ -2610,32 +2255,26 @@ namespace orcplan
                     case 1:
                         foreach (DataRow r in ResortRowsRinfo(deliveryPlan, OrdersRows[vOrder], deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING))
                         {
-                            //foreach (DataRow c in ResortRowsCinfo(deliveryPlan, r, deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
                             {
                                 OrdersRows[vOrder][colOINFO_RID] = r[colRINFO_RID];
-                                //OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
                                 deliveryPlan.Tables[tblOINFO].AcceptChanges();
 
                                 WatchPlanningForCartesianOrderStateBeginning.Stop();
                                 PlanningForCartesian(dir + "(" + r[colRINFO_RID].ToString() /*+ "-" + c[colCINFO_CID].ToString()*/ + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
-                                //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                                 WatchPlanningForCartesianOrderStateBeginning.Start();
                             }
                         }
                         break;
 
                     case 2:
-                        //foreach (DataRow r in ResortRowsRinfo(deliveryPlan, OrdersRows[vOrder], deliveryPlan.Tables[tblRINFO].Rows).Take(MAX_RESTAURANTS_FOR_PLANNING))
                         {
                             foreach (DataRow c in ResortRowsCinfo(deliveryPlan, /*r*/deliveryPlan.Tables[tblRINFO].Rows.Find(OrdersRows[vOrder][colOINFO_RID]), deliveryPlan.Tables[tblCINFO].Rows).Take(MAX_COURIERS_FOR_PLANNING))
                             {
-                                //OrdersRows[vOrder][colOINFO_RID] = r[colRINFO_RID];
                                 OrdersRows[vOrder][colOINFO_CID] = c[colCINFO_CID];
                                 deliveryPlan.Tables[tblOINFO].AcceptChanges();
 
                                 WatchPlanningForCartesianOrderStateBeginning.Stop();
                                 PlanningForCartesian(dir + "(" /*+ r[colRINFO_RID].ToString()*/ + "-" + c[colCINFO_CID].ToString() + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
-                                //PlanningForCartesian(dir + "(" + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                                 WatchPlanningForCartesianOrderStateBeginning.Start();
                             }
                         }
@@ -2646,7 +2285,6 @@ namespace orcplan
             }
             else
             {
-                //PlanningForCartesian(dir + "(" + OrdersRows[vOrder][colORDERS_RID].ToString() + "-" + OrdersRows[vOrder][colORDERS_CID].ToString() + ")", vOrder + 1, deliveryPlan, bgnnOrders);
                 PlanningForCartesian(dir + "(" + ")", passlevel, vOrder + 1, deliveryPlan, bgnnOrders);
             }
         }
@@ -2665,24 +2303,10 @@ namespace orcplan
                 string latS = row["LAT"].ToString();
                 string lngS = row["LNG"].ToString();
 
-                //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-                //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
                 GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
-
-                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                //int lll = int.Parse(json["result"][0]["length"].ToString());
-                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
-                //return latD * latD + lngD * lngD;
 
                 DateTime sortDateTime = buildt.AddSeconds(r.Duration);
 
-                //DataRow[] 
                 var ordsCinfo = deliveryPlan.Tables[tblOINFO].Select().Where(
                     rowOinfo =>
                     {
@@ -2690,26 +2314,14 @@ namespace orcplan
                         || (OINFO_STATE)rowOinfo[colOINFO_STATE] == OINFO_STATE.PLACING
                         || (OINFO_STATE)rowOinfo[colOINFO_STATE] == OINFO_STATE.ENDED)
                         && rowOinfo[colOINFO_CID].ToString().Contains(row[colCINFO_CID].ToString());
-                    });//.ToArray();
+                    });
 
                 foreach (DataRow ord in ordsCinfo)
                 {
                     latS = ord["LAT"].ToString();
                     lngS = ord["LNG"].ToString();
 
-                    //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-                    //string r_internal = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
                     GeoRouteData r_internal = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                    //JsonValue json_internal = JsonValue.Parse(r);
-
-                    //double distBetInternal = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                    //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                    //int lll = int.Parse(json["result"][0]["length"].ToString());
-                    //int ddd_internal = (int)distBetInternal / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                    //int lll_internal = (int)distBetInternal;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                    //int ddd_internal = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                    //int lll_internal = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                     DateTime sortDateTime_internal = ((DateTime)ord[colOINFO_TE]).AddSeconds(r_internal.Duration);
 
@@ -2725,15 +2337,12 @@ namespace orcplan
                 return row_time[row];// sortDateTime; // + duration for available...
             }).ToArray();
 
-            //DataRow[] rrr = sortRows.ToArray<DataRow>();
 
             string debugCinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colCINFO_CID].ToString(); }));
 
-            //Console.WriteLine($"ResortRowsCinfo: {dataRow[colRINFO_RID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugCinfoOrder}");
             Console.Write($"c{sortRows.Length}");
             WatchResortRows.Stop();
-            //return sortRows.OfType<DataRow>();
-            return sortRows;//.Reverse();
+            return sortRows;
         }
 
         private static IEnumerable<DataRow> ResortRowsRinfo(DataSet deliveryPlan, DataRow dataRow, DataRowCollection rows)
@@ -2758,42 +2367,20 @@ namespace orcplan
 
             }).OrderBy<DataRow, DateTime>(row =>
             {
-                //a string latS = row["LAT"].ToString();
-                //a string lngS = row["LNG"].ToString();
-
-                //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-                //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
-                //a GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
-
-                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                //int lll = int.Parse(json["result"][0]["length"].ToString());
-                //int ddd = (int)distBet / 14; ;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
-                //return latD * latD + lngD * lngD;
                 return buildt.AddSeconds(row_dur[row]);// r.Duration); // + duration of cooking...
             }).ToArray();
 
-            //DataRow[] rrr = sortRows.ToArray<DataRow>();
-
             string debugRinfoOrder = String.Join("-", sortRows.Select<DataRow, string>(r => { return r[colRINFO_RID].ToString(); }));
 
-            //Console.WriteLine($"ResortRowsRinfo: {dataRow[colOINFO_OID].ToString()} {dataRow.Table.TableName}: {sortRows.Count()/*.Length*/} {debugRinfoOrder}");
             Console.Write($"r{sortRows.Length}");
             WatchResortRows.Stop();
-            //return sortRows.OfType<DataRow>();
-            return sortRows;//.Reverse();
+            return sortRows;
         }
 
         // 
         private static IEnumerable<DataRow> ResortRows(DataRow dataRow, DataRowCollection rows)
         {
             WatchResortRows.Start();
-            //throw new NotImplementedException();
             double latS = double.Parse(dataRow["LAT"].ToString());
             double lngS = double.Parse(dataRow["LNG"].ToString());
 
@@ -2804,20 +2391,14 @@ namespace orcplan
                  return latD * latD + lngD * lngD;
              }).ToArray();
 
-            //DataRow[] rrr = sortRows.ToArray<DataRow>();
             Console.WriteLine($"{dataRow.Table.TableName}: {sortRows.Count()/*.Length*/}");
             WatchResortRows.Stop();
-            //return sortRows.OfType<DataRow>();
             return sortRows;
         }
 
         private static void PlanningForCinfo(string dir, int vCinfo, DataSet deliveryPlan, DataRow[] bgnnOrders, long totalRouteLength)
         {
-            //Thread.Sleep(5);
             WatchPlanningForCinfo.Start();
-            //throw new NotImplementedException();
-
-            // 20190506 if (totalRouteLength > TspRouteLength) return;
 
             DataTable ORDERS = deliveryPlan.Tables[tblOINFO];
             DataTable CINFO = deliveryPlan.Tables[tblCINFO];
@@ -2831,12 +2412,6 @@ namespace orcplan
             else
             {
                 DataRow[] ords = ORDERS.Select($"CID = '{CINFO.Rows[vCinfo][colCINFO_CID]}'");
-
-                //string route = ords.Aggregate<DataRow, string, string>("", (a, b) => String.Concat(a, "-", b["RID"].ToString(), "-", b["OID"].ToString()), a => a);
-                //deliveryPlan.Tables["CINFO"].Rows[vCinfo]["ROUTE"] = route;
-                //deliveryPlan.AcceptChanges();
-
-                //PlanningForCinfo(dir + "(" + route + ")", vCinfo + 1, deliveryPlan);
 
                 WatchPlanningForCinfo.Stop();
                 if (ords.Length <= MAX_ORDERS_FOR_COURIERS)
@@ -2861,37 +2436,6 @@ namespace orcplan
             TimeSpan div = (TimeSpan)deliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"];
 
             string[] paths = dir.Split(Path.DirectorySeparatorChar);
-            //long totalLength = (long)CINFO.Compute("SUM(ROUTELENGTH)", "");
-
-            //if (totalLength > TspRouteLength) return;
-
-            //string dirName = Path.GetDirectoryName(dir);
-            //string fileName = Path.GetFileName(dir);
-
-            //string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), paths[0], String.Join("-", totalRouteLength.ToString("D8"), med.ToString("hhmmss"), div.ToString("hhmmss")) + paths[1] + ".xml");
-            //string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dirName, String.Join("-", totalRouteLength.ToString("D8"), med.ToString("hhmmss"), div.ToString("hhmmss")) + fileName + ".xml");
-            //string htmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dirName, String.Join("-", totalRouteLength.ToString("D8"), med.ToString("hhmmss"), div.ToString("hhmmss")) + fileName + ".html");
-
-            //Path.GetRandomFileName());                                                                                                                                                                                                                
-            //string xmlFileName = Path.Combine(Directory.GetCurrentDirectory(), dir, "(" + deliveryPlan.Tables["ORDERS"].Rows. + ")(" + deliveryPlan.Tables["ORDERS"].Rows[v]["CID"] + ").xml");                                                                                                                                                                                                                
-            //string xmlFileName = dir + ".xml";
-
-            //if (File.Exists(xmlFileName))
-            {
-                //    xmlFileName += "(" + Path.GetRandomFileName() + ")";
-            }
-
-            //Console.WriteLine($"write DP with total length {totalRouteLength}");
-            //Console.Write(".");
-            //deliveryPlan.WriteXml(xmlFileName);
-            //WriteHtmlVersionTheBestDeliveryPlan(deliveryPlan, htmlFileName);
-
-            //string fnBUILDT = ((DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"]).ToString("yyyy-MM-dd-HH-mm");
-            //string fnBUILDO = deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDO"].ToString();
-            //string fnTOTALENGTH = deliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"].ToString();
-            //string filenameTBDP = $"CODP-{fnBUILDT}-{fnBUILDO}-{fnTOTALENGTH}";
-
-            //deliveryPlan.WriteXml(Path.Combine(BaseDirectoryForCDP,  $"{filenameTBDP}-{Path.GetRandomFileName()}.xml"));
 
             ConsoleColor concol = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
@@ -2902,15 +2446,14 @@ namespace orcplan
             {
                 TheBestDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TBDP MED {(TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["MED"]} DIV {(TimeSpan)TheBestDeliveryPlan.Tables["SUMMARY"].Rows[0]["DIV"]}");
-                WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
+                //WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
             }
             else
             {
                 if (CompareMedAndDiv(TheBestDeliveryPlan, deliveryPlan))
                 {
                     TheBestDeliveryPlan = deliveryPlan.Copy();
-                    //Console.WriteLine($"new TBDP");
-                    WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
+                    //WriteDeliveryPlan("TBDP-T-", BaseDirectoryForCDP, TheBestDeliveryPlan);
                 }
             }
 
@@ -2918,15 +2461,14 @@ namespace orcplan
             {
                 TheFastDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TFDP DUR {(TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]}");
-                WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
+                //WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
             }
             else
             {
                 if (CompareTotalDuration(TheFastDeliveryPlan, deliveryPlan))
                 {
                     TheFastDeliveryPlan = deliveryPlan.Copy();
-                    //Console.WriteLine($"new TFDP");
-                    WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
+                    //WriteDeliveryPlan("TFDP-T-", BaseDirectoryForCDP, TheFastDeliveryPlan);
                 }
             }
             bestTotalDuration = (int)((TimeSpan)TheFastDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALDURATION"]).TotalSeconds;
@@ -2935,15 +2477,14 @@ namespace orcplan
             {
                 TheShortDeliveryPlan = deliveryPlan.Copy();
                 Console.WriteLine($"\nnew TSDP DIS {(int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"]}");
-                WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
+                //WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
             }
             else
             {
                 if ((totalRouteLength > 0) && CompareTotalength(TheShortDeliveryPlan, totalRouteLength))// || 
                 {
                     TheShortDeliveryPlan = deliveryPlan.Copy();
-                    //Console.WriteLine($"new TSDP");
-                    WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
+                    //WriteDeliveryPlan("TSDP-T-", BaseDirectoryForCDP, TheShortDeliveryPlan);
                 }
             }
             bestTotalDistance = (int)TheShortDeliveryPlan.Tables["SUMMARY"].Rows[0]["TOTALENGTH"];
@@ -3001,18 +2542,15 @@ namespace orcplan
 
         private static void UpdateMedDiv(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
-
             TimeSpan med = TimeSpan.FromSeconds(0);
             TimeSpan div = TimeSpan.FromSeconds(0);
-            int rowsCount = 0;//deliveryPlan.Tables[tblORDERS].Rows.Count;
+            int rowsCount = 0;
 
             deliveryPlan.Tables[tblOINFO].Select().All<DataRow>(dr =>
             {
                 if ((TimeSpan)dr[colOINFO_TD] > TimeSpan.FromTicks(0))
                 {
-                    //med += TimeSpan.FromTicks(((TimeSpan)dr[colORDERS_TD]).Ticks / rowsCount);
-                    med += ((DateTime)dr[colOINFO_TP]) - ((DateTime)dr[colOINFO_TR]);  //(TimeSpan)dr[colOINFO_TD];
+                    med += ((DateTime)dr[colOINFO_TP]) - ((DateTime)dr[colOINFO_TR]);
                     rowsCount++;
                 }
                 return true;
@@ -3028,7 +2566,6 @@ namespace orcplan
                 {
                     if ((TimeSpan)dr[colOINFO_TD] > TimeSpan.FromTicks(0))
                     {
-                        //long tk = med.Ticks;
                         div += TimeSpan.FromTicks(Math.Abs((med.Ticks - ((TimeSpan)dr[colOINFO_TD]).Ticks)) / rowsCount);
                     }
                     return true;
@@ -3049,8 +2586,6 @@ namespace orcplan
 
         private static void CalculateStatistics(DataSet deliveryPlan)
         {
-            //throw new NotImplementedException();
-
             deliveryPlan.Tables[tblOINFO].Select().All<DataRow>(dr =>
             {
                 DateTime TOT = (DateTime)dr[colOINFO_TOT];
@@ -3065,7 +2600,6 @@ namespace orcplan
         private static void PlanningForRoutes(string dir, int vCinfo, DataSet deliveryPlan, DataRow[] bgnnOrders, DataRow[] ords, int vDpair, LinkedList<string> listRoute, long totalRouteLength)
         {
             WatchPlanningForRoutes.Start();
-            //throw new NotImplementedException();
 
             if (vDpair >= ords.Length)
             {
@@ -3078,7 +2612,6 @@ namespace orcplan
                 CinfoRows[vCinfo][colCINFO_ROUTE] = route;
                 deliveryPlan.AcceptChanges();
 
-                //PlanningForCinfo(dir + "(" + route + ")", vCinfo + 1, deliveryPlan, totalRouteLength + routeLength);
                 WatchPlanningForRoutes.Stop();
                 PlanningForCinfo(dir, vCinfo + 1, deliveryPlan, bgnnOrders, totalRouteLength + infos.Distance);
                 WatchPlanningForRoutes.Start();
@@ -3086,25 +2619,19 @@ namespace orcplan
             else
             {
                 LinkedList<string> newRoute = new LinkedList<string>(listRoute);
-                //int firstR = 0;
                 LinkedListNode<string> firstRlinked = newRoute.First;
 
                 if (firstRlinked != null)
                 {
-                    //firstR = 0;
                     string[] pnt;
                     do
                     {
-                        //pnt = listRoute[firstR].Split("[]".ToCharArray());
                         pnt = firstRlinked.Value.Split("[]".ToCharArray());
                         if (pnt.Length > 1) break;
-                        //if (++firstR >= listRoute.Count) break;
                         firstRlinked = firstRlinked.Next;
                         if (firstRlinked == null) break;
                     }
                     while (false);
-                    //firstR--;
-                    //firstRlinked = firstRlinked.Previous;
                 }
 
                 switch ((OINFO_STATE)ords[vDpair][colOINFO_STATE])
@@ -3141,7 +2668,6 @@ namespace orcplan
                     case OINFO_STATE.ENDED:
 
                         {
-                            //LinkedList<string> newRoute = new LinkedList<string>(listRoute);
                             WatchPlanningForRoutes.Stop();
                             PlanningForRoutes(dir, vCinfo, deliveryPlan, bgnnOrders, ords, vDpair + 1, newRoute, totalRouteLength);
                             WatchPlanningForRoutes.Start();
@@ -3170,13 +2696,8 @@ namespace orcplan
             else
             {
                 LinkedListNode<string> stopNode = null;
-                //if (firstRlinked != null) stopNode = firstRlinked.Next;
-                //for (int Opos = 0; Opos <= firstR; Opos++)
                 for (LinkedListNode<string> OposLinked = newRoute.First; OposLinked != null; OposLinked = OposLinked.Next)
                 {
-                    //LinkedList<string> newRoute = new LinkedList<string>(listRoute);
-                    //string OID = ords[vDpair][colORDERS_OID].ToString();
-
                     LinkedListNode<string> oidNode = newRoute.AddBefore(OposLinked, OID);
 
                     PlanningForRoutes(dir, vCinfo, deliveryPlan, bgnnOrders, ords, vDpair + 1, newRoute, totalRouteLength);
@@ -3193,8 +2714,6 @@ namespace orcplan
                 }
                 if (stopNode == null)
                 {
-                    //string OID = ords[vDpair][colORDERS_OID].ToString();
-
                     newRoute.AddLast(OID);
 
                     PlanningForRoutes(dir, vCinfo, deliveryPlan, bgnnOrders, ords, vDpair + 1, newRoute, totalRouteLength);
@@ -3209,12 +2728,6 @@ namespace orcplan
 
             if (newRoute.First == null)
             {
-                //string RID = ords[vDpair][colORDERS_RID].ToString();
-                //LinkedList<string> newRoute = new LinkedList<string>(listRoute);
-                //string OID = ords[vDpair][colORDERS_OID].ToString();
-
-                //newRoute.Insert(Opos, OID);
-                //newRoute.Insert(Rpos, RID + "[" + OID + "]");
                 newRoute.AddFirst(OID);
                 newRoute.AddFirst(RID + "[" + OID + "]");
 
@@ -3222,13 +2735,8 @@ namespace orcplan
             }
             else
             {
-                //for (int Opos = firstR; Opos <= listRoute.Count; Opos++)
-
                 if (firstRlinked == null)
                 {
-                    //string RID = ords[vDpair][colORDERS_RID].ToString();
-                    //string OID = ords[vDpair][colORDERS_OID].ToString();
-
                     newRoute.AddLast(RID + "[" + OID + "]");
                     newRoute.AddLast(OID);
 
@@ -3236,19 +2744,14 @@ namespace orcplan
                 }
                 else
                 {
-                    //string RID = ords[vDpair][colORDERS_RID].ToString();
-
                     for (LinkedListNode<string> OposLinked = firstRlinked; OposLinked != null; OposLinked = OposLinked.Next)
                     {
-                        //for (int Opos = 0; Opos <= 0; Opos++)
-                        //for (int Rpos = firstR; Rpos <= Opos; Rpos++)
                         for (LinkedListNode<string> RposLinked = firstRlinked; RposLinked != OposLinked.Next; RposLinked = RposLinked.Next)
                         {
                             if (newRoute.First != null)
                             {
                                 if (RposLinked != newRoute.First)
                                 {
-                                    //string[] pnt = listRoute[Rpos - 1].Split("[]".ToCharArray());
                                     string[] pnt = RposLinked.Value.Split("[]".ToCharArray());
                                     if (pnt.Length > 1)
                                     {
@@ -3261,7 +2764,6 @@ namespace orcplan
 
                                 if (RposLinked != OposLinked)
                                 {
-                                    //string[] pnt = listRoute[Rpos].Split("[]".ToCharArray());
                                     string[] pnt = RposLinked.Value.Split("[]".ToCharArray());
                                     if (pnt.Length > 1)
                                     {
@@ -3273,11 +2775,6 @@ namespace orcplan
                                 }
                             }
 
-                            //LinkedList<string> newRoute = new LinkedList<string>(listRoute);
-                            //string OID = ords[vDpair][colORDERS_OID].ToString();
-
-                            //newRoute.Insert(Opos, OID);
-                            //newRoute.Insert(Rpos, RID + "[" + OID + "]");
                             LinkedListNode<string> ridNode = newRoute.AddBefore(RposLinked, RID + "[" + OID + "]");
                             LinkedListNode<string> oidNode = newRoute.AddBefore(OposLinked, OID);
 
@@ -3288,9 +2785,6 @@ namespace orcplan
                         }
                     }
                     {
-                        //string RID = ords[vDpair][colORDERS_RID].ToString();
-                        //string OID = ords[vDpair][colORDERS_OID].ToString();
-
                         newRoute.AddLast(RID + "[" + OID + "]");
                         newRoute.AddLast(OID);
 
@@ -3315,7 +2809,6 @@ namespace orcplan
         private static RouteTotalInfos GetRouteInfos(int vCinfo, DataSet deliveryPlan, LinkedList<string> listRoute)
         {
             WatchGetRouteInfos.Start();
-            //throw new NotImplementedException();
 
             DateTime buildt = (DateTime)deliveryPlan.Tables["SUMMARY"].Rows[0]["BUILDT"];
 
@@ -3323,7 +2816,6 @@ namespace orcplan
             DataTable RINFO = deliveryPlan.Tables[tblRINFO];
             DataTable CINFO = deliveryPlan.Tables[tblCINFO];
 
-            //int len = 0;
             RouteTotalInfos infos = new RouteTotalInfos();
 
             string latS, lngS, latD, lngD;
@@ -3332,29 +2824,13 @@ namespace orcplan
             latS = (string)CINFO.Rows[vCinfo][colCINFO_LAT];
             lngS = (string)CINFO.Rows[vCinfo][colCINFO_LNG];
 
-            //for (int idx = 0; idx < listRoute.Count; idx++)
             for (LinkedListNode<string> idxLinked = listRoute.First; idxLinked != null; idxLinked = idxLinked.Next)
             {
-                //string[] src = listRoute[idx - 1].Split("[]".ToCharArray());
-
-                //if (src.Length > 1)
-                //{
-                //    latS = deliveryPlan.Tables["RINFO"].Select($"RID = '{src[0]}'")[0]["LAT"].ToString();
-                //    lngS = deliveryPlan.Tables["RINFO"].Select($"RID = '{src[0]}'")[0]["LNG"].ToString();
-                //}
-                //else
-                //{
-                //    latS = deliveryPlan.Tables["ORDERS"].Select($"OID = '{src[0]}'")[0]["LAT"].ToString();
-                //    lngS = deliveryPlan.Tables["ORDERS"].Select($"OID = '{src[0]}'")[0]["LNG"].ToString();
-                //}
 
                 string OID;
-                //string[] dst = listRoute[idx].Split("[]".ToCharArray());
                 string[] dst = idxLinked.Value.Split("[]".ToCharArray());
                 if (dst.Length > 1)
                 {
-                    //latD = RINFO.Select($"RID = '{dst[0]}'")[0]["LAT"].ToString();
-                    //lngD = RINFO.Select($"RID = '{dst[0]}'")[0]["LNG"].ToString();
                     DataRow RinfoRow = RINFO.Rows.Find(dst[0]);
                     latD = RinfoRow[colRINFO_LAT].ToString();
                     lngD = RinfoRow[colRINFO_LNG].ToString();
@@ -3362,29 +2838,14 @@ namespace orcplan
                 }
                 else
                 {
-                    //latD = ORDERS.Select($"OID = '{dst[0]}'")[0]["LAT"].ToString();
-                    //lngD = ORDERS.Select($"OID = '{dst[0]}'")[0]["LNG"].ToString();
                     DataRow OrdersRow = OINFO.Rows.Find(dst[0]);
                     latD = OrdersRow[colOINFO_LAT].ToString();
                     lngD = OrdersRow[colOINFO_LNG].ToString();
                     OID = dst[0];
                 }
 
-                //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-                //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
                 GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
 
-                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                //int lll = int.Parse(json["result"][0]["length"].ToString());
-                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
-
-                //len += r.Distance;
                 infos.Distance += r.Distance;
                 infos.Duration += r.Duration;
 
@@ -3426,21 +2887,7 @@ namespace orcplan
                 latD = (string)rinfoRow[colRINFO_LAT];
                 lngD = (string)rinfoRow[colRINFO_LNG];
 
-                //string r = GetGeoPathTotal2Gis(latS, lngS, latD, lngD);
-                //string r = GetGeoPathTotalYandex(buildt, latS, lngS, latD, lngD);
                 GeoRouteData r = GetGeoPathTotalOSRM(buildt, latS, lngS, latD, lngD);
-                //JsonValue json = JsonValue.Parse(r);
-
-                //double distBet = GetGeoPathDistance(latS, lngS, latD, lngD);
-
-                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                //int lll = int.Parse(json["result"][0]["length"].ToString());
-                //int ddd = (int)distBet / 14;// int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                //int lll = (int)distBet;// int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
-
-                //len += lll;
             }
 
             WatchGetRouteInfos.Stop();
@@ -3452,27 +2899,6 @@ namespace orcplan
         /// </summary>
         private static DataSet ReadTestPlan()
         {
-            //DataTable tbl = new DataTable("ORDERS");
-
-            //tbl.Columns.Add("STATE", typeof(ORDER_STATE));
-            //tbl.Columns.Add("OID", typeof(string));
-            //tbl.Columns.Add("ADDRESS", typeof(string));
-            //tbl.Columns.Add("LAT", typeof(string));
-            //tbl.Columns.Add("LNG", typeof(string));
-            //tbl.Columns.Add("TB", typeof(DateTime));
-            //tbl.Columns.Add("TC", typeof(DateTime));
-            //tbl.Columns.Add("TR", typeof(DateTime));
-            //tbl.Columns.Add("TT", typeof(DateTime));
-            //tbl.Columns.Add("TP", typeof(DateTime));
-            //tbl.Columns.Add("TE", typeof(DateTime));
-            //tbl.Columns.Add("TOT", typeof(DateTime));
-            //tbl.Columns.Add("RID", typeof(string));
-            //tbl.Columns.Add("CID", typeof(string));
-            ////tbl.Columns.Add("MAPATH", typeof(string));
-            //tbl.Columns.Add("TD", typeof(TimeSpan));
-
-            //tbl.ReadXml("testwritexml.xml");
-
             DataSet set = new DataSet("DLVR");
             set.ReadXmlSchema("testxmlschema.xml");
             set.ReadXml("testwriteset.xml");
@@ -3482,13 +2908,6 @@ namespace orcplan
 
         private static void CreateSchemaForDeliveryPlan(string[] args)
         {
-            //string[] lines = File.ReadAllLines(args[0]);
-
-            //foreach (string str in lines)
-            {
-                //string[] row = str.Split('\t');
-            }
-
             DataTable summary = new DataTable("SUMMARY");
 
             summary.Columns.Add("BUILDT", typeof(DateTime));
@@ -3556,23 +2975,10 @@ namespace orcplan
                 row["LNG"] = "37.690273";
                 row["TOS"] = DateTime.Now;
                 Cinfo.Rows.Add(row);
-
-                //row = Cinfo.NewRow();
-                //row["CID"] = "K182";
-                //row["ADDRESS"] = "г.Тула, Вильямса ул, 38В";
-                //row["TOS"] = DateTime.Now;
-                //Cinfo.Rows.Add(row);
-
-                //row = Cinfo.NewRow();
-                //row["CID"] = "K183";
-                //row["ADDRESS"] = "г.Тула, Вильямса ул, 38В";
-                //row["TOS"] = DateTime.Now;
-                //Cinfo.Rows.Add(row);
             }
             Cinfo.AcceptChanges();
 
             DataTable tbl = new DataTable("OINFO");
-            //tbl.ReadXml("");
 
             tbl.Columns.Add("OSTATE", typeof(OINFO_STATE));
             tbl.Columns.Add("OID", typeof(string));
@@ -3588,7 +2994,6 @@ namespace orcplan
             tbl.Columns.Add("TOT", typeof(DateTime));
             tbl.Columns.Add("RID", typeof(string));
             tbl.Columns.Add("CID", typeof(string));
-            //tbl.Columns.Add("MAPATH", typeof(string));
             tbl.Columns.Add("TD", typeof(TimeSpan));
             tbl.PrimaryKey = new DataColumn[] { tbl.Columns["OID"] };
 
@@ -3608,7 +3013,6 @@ namespace orcplan
                 row["TOT"] = row["TB"];
                 row["RID"] = "ТМ18";
                 row["CID"] = "К18";
-                //row["MAPATH"] = "ТМ18-695354";
                 row["TD"] = TimeSpan.FromMinutes(5);
                 tbl.Rows.Add(row);
 
@@ -3627,26 +3031,8 @@ namespace orcplan
                 row["TOT"] = row["TB"];
                 row["RID"] = "ТМ3";
                 row["CID"] = "К3";
-                //row["MAPATH"] = "ТМ3-695360";
                 row["TD"] = TimeSpan.FromMinutes(5);
                 tbl.Rows.Add(row);
-
-                //row = tbl.NewRow();
-                //row["STATE"] = ORDER_STATE.BEGINNING;
-                //row["OID"] = "695361";
-                //row["ADDRESS"] = "г. Тула, Чапаева ул, д. 43";
-                //row["TB"] = DateTime.Now;
-                //row["TC"] = DateTime.Now;
-                //row["TR"] = DateTime.Now;
-                //row["TT"] = DateTime.Now;
-                //row["TP"] = DateTime.Now;
-                //row["TE"] = DateTime.Now;
-                //row["TOT"] = DateTime.Now;
-                //row["RID"] = "ТМ3";
-                //row["CID"] = "К3";
-                ////row["MAPATH"] = "ТМ3-695361";
-                //row["TD"] = TimeSpan.FromMinutes(5);
-                //tbl.Rows.Add(row);
             }
 
             tbl.AcceptChanges();
@@ -3669,10 +3055,6 @@ namespace orcplan
         private static string GetTspRoute2Gis(string postData)
         {
             var request = (HttpWebRequest)WebRequest.Create(@"http://catalog.api.2gis.ru//get_tsp/?key=rueejy0019");
-            //request.Headers[]=;
-
-            //var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
-
             string geoInfo = String.Empty;
 
             var data = Encoding.ASCII.GetBytes(postData);
@@ -3728,11 +3110,10 @@ namespace orcplan
             lock (lockObj)
             {
                 var request = (HttpWebRequest)WebRequest.Create(@"http://catalog.api.2gis.ru//carrouting/4.0.0/tula/?key=rueejy0019");
-                //request.Headers[]=;
 
                 var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
 
-                GeoRouteData geoInfo = null;// String.Empty;
+                GeoRouteData geoInfo = null;
                 if (!GeoRouteInfo.TryGetValue(postData, out geoInfo))
                 {
 
@@ -3764,33 +3145,16 @@ namespace orcplan
         {
             lock (lockObj)
             {
-                //string latlngForKey = String.Join(",", latS, lngS, latD, lngD);
-
                 string requestString = String.Concat("https://api.routing.yandex.net/v1.0.0/distancematrix?origins=", latS, ",", lngS, "&destinations=", latD, ",", lngD, "&apikey=a1d0badd-df1d-4814-8d43-eab723c50133");
 
                 var request = (HttpWebRequest)WebRequest.Create(requestString);
                 request.Method = "GET";
 
-                //request.Headers[]=;
-
-                //var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
-
-                GeoRouteData geoInfo = null;// String.Empty;
+                GeoRouteData geoInfo = null;
                 //do
                 {
                     if (!GeoRouteInfo.TryGetValue(requestString, out geoInfo))
                     {
-
-                        //var data = Encoding.ASCII.GetBytes(postData);
-
-                        //request.Method = "GET";
-                        //request.ContentType = "application/x-www-form-urlencoded";
-                        //request.ContentLength = data.Length;
-
-                        //using (var stream = request.GetRequestStream())
-                        //{
-                        //    stream.Write(data, 0, data.Length);
-                        //}
 
                         bool isRepeat = false;
                         WebResponse response = null;
@@ -3862,34 +3226,15 @@ namespace orcplan
         {
             lock (lockObj)
             {
-                //string latlngForKey = String.Join(",", latS, lngS, latD, lngD);
-
                 string requestString = String.Concat("http://router.project-osrm.org/route/v1/driving/", lngS, ",", latS, ";", lngD, ",", latD, "?overview=false");
 
-                HttpWebRequest request = null;// = (HttpWebRequest)WebRequest.Create(requestString);
-                //request.Method = "GET";
+                HttpWebRequest request = null;
 
-                //request.Headers[]=;
-
-                //var postData = String.Concat("{ \"locale\": \"ru\", \"point_a_name\": \"point A\", \"point_b_name\": \"point B\", \"points\": [ { \"type\": \"pedo\", \"x\": ", lngS, ", \"y\": ", latS, " }, { \"type\": \"pedo\", \"x\": ", lngD, ", \"y\": ", latD, " } ], \"type\": \"jam\", \"output\":\"simple\"}");
-
-                GeoRouteData geoInfo = null;// String.Empty;
+                GeoRouteData geoInfo = null;
                 //do
                 {
                     if (!GeoRouteInfo.TryGetValue(requestString, out geoInfo))
                     {
-
-                        //var data = Encoding.ASCII.GetBytes(postData);
-
-                        //request.Method = "GET";
-                        //request.ContentType = "application/x-www-form-urlencoded";
-                        //request.ContentLength = data.Length;
-
-                        //using (var stream = request.GetRequestStream())
-                        //{
-                        //    stream.Write(data, 0, data.Length);
-                        //}
-
                         request = (HttpWebRequest)WebRequest.Create(requestString);
                         request.Method = "GET";
                         bool isRepeat = false;
@@ -3960,7 +3305,7 @@ namespace orcplan
                 }
                 //while ((timeMark - geoInfo.TimeMark) > TimeSpan.FromMinutes(30));
 
-                return geoInfo;//.GeoResponse;
+                return geoInfo;
             }
         }
 
@@ -4021,7 +3366,6 @@ namespace orcplan
                     else break;
                 }
 
-            //Console.ReadLine();
             return startingTour;
         }
 
@@ -4040,9 +3384,6 @@ namespace orcplan
             public TspCity(DataRow cityInfo)
             {
                 CityInfo = cityInfo;
-                //X = rand.NextDouble() * 100;
-                //Y = rand.NextDouble() * 100;
-                //CityName = cityName;
                 LAT = cityInfo["LAT"].ToString();
                 LNG = cityInfo["LNG"].ToString();
 
@@ -4102,25 +3443,9 @@ namespace orcplan
             {
                 if ((first == null) || (other == null)) return 0;
 
-                //string r = GetGeoPathTotal2Gis(first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
-                //string r = GetGeoPathTotalYandex(DateTime.MinValue, first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
                 GeoRouteData r = GetGeoPathTotalOSRM(DateTime.MinValue, first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
-                //JsonValue json = JsonValue.Parse(r);
-
-                //double distanceBetween = MainClass.GetGeoPathDistance(first.City.LAT, first.City.LNG, other.City.LAT, other.City.LNG);
-
-                //int ddd = int.Parse(json["result"][0]["duration"].ToString());
-                //int lll = int.Parse(json["result"][0]["length"].ToString());
-                //int ddd = (int)distanceBetween / 14; //int.Parse(json["rows"][0]["elements"][0]["duration"]["value"].ToString());
-                //int lll = (int)distanceBetween; //int.Parse(json["rows"][0]["elements"][0]["distance"]["value"].ToString());
-                //int ddd = (int)double.Parse(json["routes"][0]["duration"].ToString());
-                //int lll = (int)double.Parse(json["routes"][0]["distance"].ToString());
 
                 return r.Distance;
-
-                //return Math.Sqrt(
-                //    Math.Pow(first.City.X - other.City.X, 2) +
-                //    Math.Pow(first.City.Y - other.City.Y, 2));
             }
 
 
@@ -4163,13 +3488,6 @@ namespace orcplan
 
             return sCoord.GetDistanceTo(eCoord);
         }
-
-        //private static double GetOSRMDistance(string osrmResult)
-        //{
-
-        //    return sCoord.GetDistanceTo(eCoord);
-        //}
-
 
         public class TspTour
         {
