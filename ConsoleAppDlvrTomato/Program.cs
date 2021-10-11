@@ -19,9 +19,33 @@ using SimpleHttp;
 namespace orcplan
 {
 
-    enum OINFO_STATE { UNDEFINE = 100, BEGINNING = 110, COOKING = 120, READY = 130, TRANSPORTING = 140, PLACING = 150, ENDED = 160 };
-    enum RINFO_STATE { UNDEFINE = 200, OFFLINE = 210, ONLINE = 220, BRAKEDOWN = 230 };
-    enum CINFO_STATE { UNDEFINE = 300, OFFLINE = 310, ONLINE = 320, BRAKEDOWN = 330, ONROAD = 340 };
+    enum OINFO_STATE
+    {
+        UNDEFINE = 100,
+        BEGINNING = 110,
+        COOKING = 120,
+        READY = 130,
+        TRANSPORTING = 140,
+        PLACING = 150,
+        ENDED = 160
+    };
+
+    enum RINFO_STATE
+    {
+        UNDEFINE = 200,
+        OFFLINE = 210,
+        ONLINE = 220,
+        BRAKEDOWN = 230
+    };
+
+    enum CINFO_STATE
+    {
+        UNDEFINE = 300,
+        OFFLINE = 310,
+        ONLINE = 320,
+        BRAKEDOWN = 330,
+        ONROAD = 340
+    };
 
     static class MainClass
     {
@@ -62,13 +86,17 @@ namespace orcplan
 
             if (File.Exists("georouteinfo.json"))
             {
-                GeoRouteInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, GeoRouteData>>(File.ReadAllText("georouteinfo.json"));
+                GeoRouteInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, GeoRouteData>>(
+                    File.ReadAllText("georouteinfo.json")
+                    );
                 GeoRouteInfoQuantity = GeoRouteInfo.Count;
             }
 
             if (File.Exists("progresstimings.json"))
             {
-                ProgressTimings = Newtonsoft.Json.JsonConvert.DeserializeObject<SortedDictionary<string, SortedDictionary<string, TimingOfPlans>>>(File.ReadAllText("progresstimings.json"));
+                ProgressTimings = Newtonsoft.Json.JsonConvert.DeserializeObject<SortedDictionary<string, SortedDictionary<string, TimingOfPlans>>>(
+                    File.ReadAllText("progresstimings.json")
+                    );
             }
 
             bool isContinue = true;
@@ -118,7 +146,8 @@ namespace orcplan
 
                     case "RUN":
                     case "R":
-                        while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.DefaultView.Count > 0)) && !Console.KeyAvailable)
+                        while (((nextPlan.Tables[tblOINFO].Rows.Count > 0) || (BgnnOrders.DefaultView.Count > 0))
+                            && !Console.KeyAvailable)
                         {
                             stateNext = ApplyNextEvent(nextPlan);
                             deliveryPlan = nextPlan;
@@ -144,7 +173,10 @@ namespace orcplan
         {
             if (GeoRouteInfo.Count != GeoRouteInfoQuantity)
             {
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(GeoRouteInfo, Newtonsoft.Json.Formatting.Indented);
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    GeoRouteInfo,
+                    Newtonsoft.Json.Formatting.Indented
+                    );
                 File.WriteAllText("georouteinfo.json", json);
 
                 GeoRouteInfoQuantity = GeoRouteInfo.Count;
@@ -237,7 +269,10 @@ namespace orcplan
         {
             if (TheWorkDeliveryPlan != null)
             {
-                StringBuilder sb = HtmlPlanBuilder(TheWorkDeliveryPlan, "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"10\">");
+                StringBuilder sb = HtmlPlanBuilder(
+                    TheWorkDeliveryPlan,
+                    "Delivery Planning System", "<meta http-equiv=\"refresh\" content=\"10\">"
+                    );
                 //rpweb.AsText(sb.ToString(), "");
                 //rpweb.AddHeader("meta", "http-equiv=\"refresh\" content=\"15\"");
                 rpweb.AsBytes(rqweb, Encoding.UTF8.GetBytes(sb.ToString()), "text/html");
@@ -267,7 +302,14 @@ namespace orcplan
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState, Orders = RetrieveOrdersByCID(theWorkDeliveryPlan, row) },
+                new
+                {
+                    row.ItemArray,
+                    row.HasErrors,
+                    row.RowError,
+                    row.RowState,
+                    Orders = RetrieveOrdersByCID(theWorkDeliveryPlan, row)
+                },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -275,14 +317,24 @@ namespace orcplan
 
         private static object RetrieveOrdersByCID(DataSet theWorkDeliveryPlan, DataRow row)
         {
-            return theWorkDeliveryPlan.Tables[tblOINFO].Select($"CID = '{row[colCINFO_CID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(r => { return r.ItemArray; });
+            return theWorkDeliveryPlan.Tables[tblOINFO].Select(
+                $"CID = '{row[colCINFO_CID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(
+                r => { return r.ItemArray; }
+                );
         }
 
         private static string GetPlanForR(DataSet theWorkDeliveryPlan, DataRow row)
         {
             //
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                new { row.ItemArray, row.HasErrors, row.RowError, row.RowState, Orders = RetrieveOrdersByRID(theWorkDeliveryPlan, row) },
+                new
+                {
+                    row.ItemArray,
+                    row.HasErrors,
+                    row.RowError,
+                    row.RowState,
+                    Orders = RetrieveOrdersByRID(theWorkDeliveryPlan, row)
+                },
                 Newtonsoft.Json.Formatting.Indented
                 );
             return json;
@@ -290,7 +342,10 @@ namespace orcplan
 
         private static object RetrieveOrdersByRID(DataSet theWorkDeliveryPlan, DataRow row)
         {
-            return theWorkDeliveryPlan.Tables[tblOINFO].Select($"RID = '{row[colRINFO_RID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(r => { return r.ItemArray; });
+            return theWorkDeliveryPlan.Tables[tblOINFO].Select(
+                $"RID = '{row[colRINFO_RID].ToString()}'", "OSTATE DESC").Select<DataRow, object[]>(
+                r => { return r.ItemArray; }
+                );
         }
 
         private static void InitBaseDirForDPR()
@@ -874,6 +929,7 @@ namespace orcplan
 
             appLog.WriteLine($"GeoRouteInfo.Count: {GeoRouteInfo.Count}");
             appLog.WriteLine();
+            if(false)
             foreach (KeyValuePair<string, GeoRouteData> pair in GeoRouteInfo)
             {
                 appLog.WriteLine($"###{pair.GetHashCode()}");
