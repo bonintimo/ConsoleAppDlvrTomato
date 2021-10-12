@@ -70,7 +70,7 @@ namespace orcplan
         public static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Title = $"Delivery Planning System";
+            Console.Title = $"Delivery Planning System 2021-10-12";
             Console.WriteLine($"Delivery Planning System (type [h]elp for viewing available commands))");
             Console.WriteLine($"{Environment.CurrentDirectory}");
             Console.WriteLine($"PC:{Environment.ProcessorCount} CLR:{Environment.Version} WS:{Environment.WorkingSet}");
