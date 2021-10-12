@@ -53,7 +53,7 @@ namespace orcplan
         public static int MAX_RESTAURANTS_FOR_PLANNING = 2;
         public static int MAX_COURIERS_FOR_PLANNING = 3;
         public static int MAX_BEGINING_ORDERS_TO_ADD = 1;
-        public static int MAX_ORDERS_FOR_COURIERS = 5;
+        public static int MAX_ORDERS_FOR_COURIERS = 6;
         public static bool DYNAMIC_PARAMS = false;
         public static int MAX_DURATION_TO_SOURCE_SEC = 50 * 60;
         public static int MAX_PLANNING_DURATION_MSEC = 30000;
@@ -131,7 +131,7 @@ namespace orcplan
                         //ReadBgnnOrders(@"./TULA-2018-10-15-TOT.tsv");
                         //ReadBgnnOrders(@"");
                         InitBaseDirForDPR();
-                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C6.xml");// ReadTestPlan();
+                        deliveryPlan = ReadPlan(@"./tula-all-empty-R3C3.xml");// ReadTestPlan();
                         //deliveryPlan = ReadPlan(@"./tula-all-empty2.xml");// ReadTestPlan();
                         nextPlan = PlanningForOrders(deliveryPlan);
                         break;
@@ -584,16 +584,22 @@ namespace orcplan
 
             if (span > TimeSpan.Zero)
             {
-                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 64);
+                TimeSpan w = TimeSpan.FromTicks(span.Ticks / 256);
 
-                ConsoleColor concol = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($"wait {w} ... until {DateTime.Now.Add(w)}");
-                Console.ForegroundColor = concol;
+                ConsoleWriteLineWithColor(ConsoleColor.Gray, $"wait {w} ... until {DateTime.Now.Add(w)}");
+
                 Thread.Sleep(w);
             }
 
             PriorTimeSimulation = dtEvent;
+        }
+
+        private static void ConsoleWriteLineWithColor(ConsoleColor col, string w)
+        {
+            ConsoleColor concol = Console.ForegroundColor;
+            Console.ForegroundColor = col;
+            Console.WriteLine(w);
+            Console.ForegroundColor = concol;
         }
 
         private static void UpdateCourierState(DataSet nextPlan)
